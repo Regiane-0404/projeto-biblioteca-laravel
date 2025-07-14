@@ -54,7 +54,7 @@ Route::middleware([
         Route::resource('editoras', EditoraController::class)->except(['index', 'show']);
 
         // Gestão de Usuários
-        Route::resource('users', UserController::class)->except(['show']);
+        Route::resource('users', UserController::class);
         Route::patch('/users/{user}/toggle-status', [UserController::class, 'toggleStatus'])->name('users.toggle-status');
 
         // Ações de Admin em Requisições

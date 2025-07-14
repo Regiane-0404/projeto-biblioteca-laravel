@@ -249,19 +249,36 @@ class RequisicaoController extends Controller
         return back()->with('success', 'Requisição aprovada com sucesso!');
     }
 
-    public function entregar(Requisicao $requisicao)
+    public function entregar(Request $request, Requisicao $requisicao)
     {
         // Apenas Admins podem confirmar a entrega
         if (auth()->user()->role !== 'admin') {
             abort(403, 'Ação não autorizada.');
         }
 
-        $requisicao->update([
-            'status' => 'entregue', // Ou 'devolvido' dependendo da sua lógica final
-            'data_fim_real' => now(),
-            'dias_atraso' => now()->isAfter($requisicao->data_fim_prevista) ? now()->diffInDays($requisicao->data_fim_prevista) : 0
+        // Validamos a data que vem do formulário
+        $validated = $request->validate([
+            'data_fim_real' => 'required|date',
+            'observacoes' => 'nullable|string|max:500',
         ]);
 
-        return back()->with('success', 'Entrega do livro confirmada!');
+        // Convertemos a data para um objeto Carbon para fazer cálculos
+        $dataFimReal = Carbon::parse($validated['data_fim_real']);
+        $dataFimPrevista = $requisicao->data_fim_prevista;
+
+        // Calculamos os dias de atraso
+        $diasAtraso = $dataFimReal->isAfter($dataFimPrevista)
+            ? $dataFimReal->diffInDays($dataFimPrevista)
+            : 0;
+
+        // Atualizamos a requisição com os novos dados
+        $requisicao->update([
+            'status' => 'devolvido', // Mudamos o status para 'devolvido'
+            'data_fim_real' => $dataFimReal,
+            'observacoes' => $validated['observacoes'],
+            'dias_atraso' => $diasAtraso,
+        ]);
+
+        return back()->with('success', 'Devolução registrada com sucesso!');
     }
 }

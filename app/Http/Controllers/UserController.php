@@ -18,6 +18,30 @@ class UserController extends Controller
         return view('users.index', compact('users'));
     }
 
+    /**
+     * Mostra a página de detalhes de um usuário específico, incluindo seu histórico.
+     * Acessível apenas por Admins.
+     */
+    public function show(User $user)
+    {
+        // queremos os detalhes do livro associado. Ordenamos pela mais recente.
+        $user->load(['requisicoes' => function ($query) {
+            $query->with('livro')->orderBy('created_at', 'desc');
+        }]);
+
+        // ---- A LÓGICA DE DESENCRIPTAR OS NOMES DOS LIVROS ----
+        // Para evitar problemas na view, preparamos os dados aqui.
+        $user->requisicoes->each(function ($requisicao) {
+            if ($requisicao->livro) {
+                // Criamos uma propriedade temporária 'nome_visivel' com o valor desencriptado.
+                $requisicao->livro->nome_visivel = $requisicao->livro->nome;
+            }
+        });
+
+        // Enviamos o usuário (com seu histórico já carregado e processado) para a view.
+        return view('users.show', compact('user'));
+    }
+
     public function create()
     {
         return view('users.create');
@@ -72,34 +96,33 @@ class UserController extends Controller
         return redirect()->route('users.index')->with('success', 'Usuário atualizado com sucesso!');
     }
 
-     public function destroy(User $user)
+    public function destroy(User $user)
     {
-    // Método removido - usar toggleStatus() para inativar
-    return back()->with('error', 'Use o botão Ativar/Inativar para gerenciar usuários.');
-    }     
-    
-       public function toggleStatus(User $user)
-{
-    // Regra de segurança para não se auto-inativar.
-    if ($user->id === auth()->id()) {
-        return back()->with('error', 'Você não pode alterar o status da sua própria conta.');
+        // Método removido - usar toggleStatus() para inativar
+        return back()->with('error', 'Use o botão Ativar/Inativar para gerenciar usuários.');
     }
 
-    // 1. Inverte o valor do atributo 'ativo'.
-    // Se for 1 (true), torna-se 0 (false). Se for 0, torna-se 1.
-    $user->ativo = !$user->ativo;
+    public function toggleStatus(User $user)
+    {
+        // Regra de segurança para não se auto-inativar.
+        if ($user->id === auth()->id()) {
+            return back()->with('error', 'Você não pode alterar o status da sua própria conta.');
+        }
 
-    // 2. Salva explicitamente o modelo inteiro na base de dados.
-    $user->save();
+        // 1. Inverte o valor do atributo 'ativo'.
+        // Se for 1 (true), torna-se 0 (false). Se for 0, torna-se 1.
+        $user->ativo = !$user->ativo;
 
-    // 3. Força o recarregamento do modelo da base de dados para garantir que temos o valor mais recente.
-    $user->refresh();
+        // 2. Salva explicitamente o modelo inteiro na base de dados.
+        $user->save();
 
-    // 4. Cria a mensagem de sucesso com o valor GARANTIDAMENTE atualizado.
-    $mensagemStatus = $user->ativo ? 'ativado' : 'inativado';
+        // 3. Força o recarregamento do modelo da base de dados para garantir que temos o valor mais recente.
+        $user->refresh();
 
-    // 5. Retorna com a mensagem correta.
-    return back()->with('success', "Usuário {$mensagemStatus} com sucesso!");
-}
+        // 4. Cria a mensagem de sucesso com o valor GARANTIDAMENTE atualizado.
+        $mensagemStatus = $user->ativo ? 'ativado' : 'inativado';
 
+        // 5. Retorna com a mensagem correta.
+        return back()->with('success', "Usuário {$mensagemStatus} com sucesso!");
+    }
 }

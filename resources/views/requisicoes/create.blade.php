@@ -20,18 +20,14 @@
                     <form method="GET" action="{{ route('requisicoes.create') }}">
                         <div class="flex gap-4">
                             <div class="form-control flex-1">
-                                <input 
-                                    type="text" 
-                                    name="search" 
-                                    value="{{ $search }}"
-                                    placeholder="🔍 Pesquisar por título, autor ou editora..." 
-                                    class="input input-bordered w-full"
-                                >
+                                <input type="text" name="search" value="{{ $search }}"
+                                    placeholder="🔍 Pesquisar por título, autor ou editora..."
+                                    class="input input-bordered w-full">
                             </div>
                             <button type="submit" class="btn btn-primary">
                                 Pesquisar
                             </button>
-                            @if($search)
+                            @if ($search)
                                 <a href="{{ route('requisicoes.create') }}" class="btn btn-outline">
                                     Limpar
                                 </a>
@@ -55,27 +51,27 @@
                                     Escolha até 3 livros ({{ $livrosDisponiveis->total() }} disponíveis):
                                 </span>
                             </label>
-                            
-                            @if($livrosDisponiveis->count() > 0)
+
+                            @if ($livrosDisponiveis->count() > 0)
                                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
-                                    @foreach($livrosDisponiveis as $livro)
+                                    @foreach ($livrosDisponiveis as $livro)
                                         <label class="cursor-pointer">
-                                            <div class="card card-compact bg-base-100 border-2 border-transparent hover:border-primary transition-colors">
+                                            <div
+                                                class="card card-compact bg-base-100 border-2 border-transparent hover:border-primary transition-colors">
                                                 <div class="card-body">
                                                     <div class="flex items-start gap-3">
-                                                        <input 
-                                                            type="checkbox" 
-                                                            name="livros_ids[]" 
-                                                            value="{{ $livro->id }}" 
+                                                        <input type="checkbox" name="livros_ids[]"
+                                                            value="{{ $livro->id }}"
                                                             class="checkbox checkbox-primary mt-1"
-                                                            onchange="limitarSelecao(this)"
-                                                        >
+                                                            onchange="limitarSelecao(this)">
                                                         <div class="flex-1">
                                                             <h3 class="font-semibold text-sm">{{ $livro->nome }}</h3>
-                                                            <p class="text-xs text-gray-600">{{ $livro->editora->nome }}</p>
-                                                            @if($livro->autores->count() > 0)
+                                                            <p class="text-xs text-gray-600">{{ $livro->editora->nome }}
+                                                            </p>
+                                                            @if ($livro->autores->count() > 0)
                                                                 <p class="text-xs text-gray-500">
-                                                                    Por: {{ $livro->autores->pluck('nome')->join(', ') }}
+                                                                    Por:
+                                                                    {{ $livro->autores->pluck('nome')->join(', ') }}
                                                                 </p>
                                                             @endif
                                                         </div>
@@ -85,7 +81,7 @@
                                         </label>
                                     @endforeach
                                 </div>
-                                
+
                                 <!-- Paginação -->
                                 <div class="mb-4">
                                     {{ $livrosDisponiveis->links() }}
@@ -95,11 +91,11 @@
                                     <span>⚠️ Nenhum livro encontrado para "{{ $search }}"</span>
                                 </div>
                             @endif
-                            
+
                             <div class="mt-2">
                                 <span id="contador" class="text-sm text-gray-600">0/3 livros selecionados</span>
                             </div>
-                            
+
                             @error('livros_ids')
                                 <label class="label">
                                     <span class="label-text-alt text-error">{{ $message }}</span>
@@ -132,68 +128,68 @@
 </x-app-layout>
 
 <script>
-function limitarSelecao(checkbox) {
-    const checkboxes = document.querySelectorAll('input[name="livros_ids[]"]');
-    const selecionados = Array.from(checkboxes).filter(cb => cb.checked);
-    const contador = document.getElementById('contador');
-    const btnSubmit = document.getElementById('btnSubmit');
-    
-    // Atualizar contador
-    contador.innerHTML = `${selecionados.length}/3 livros selecionados`;
-    
-    // Mostrar/esconder botão limpar
-    if (selecionados.length > 0) {
-        if (!document.getElementById('btnLimpar')) {
-            const limparBtn = document.createElement('button');
-            limparBtn.type = 'button';
-            limparBtn.id = 'btnLimpar';
-            limparBtn.className = 'btn btn-sm btn-outline btn-warning ml-2';
-            limparBtn.innerHTML = '🗑️ Limpar Seleção';
-            limparBtn.onclick = limparSelecao;
-            contador.appendChild(limparBtn);
+    function limitarSelecao(checkbox) {
+        const checkboxes = document.querySelectorAll('input[name="livros_ids[]"]');
+        const selecionados = Array.from(checkboxes).filter(cb => cb.checked);
+        const contador = document.getElementById('contador');
+        const btnSubmit = document.getElementById('btnSubmit');
+
+        // Atualizar contador
+        contador.innerHTML = `${selecionados.length}/3 livros selecionados`;
+
+        // Mostrar/esconder botão limpar
+        if (selecionados.length > 0) {
+            if (!document.getElementById('btnLimpar')) {
+                const limparBtn = document.createElement('button');
+                limparBtn.type = 'button';
+                limparBtn.id = 'btnLimpar';
+                limparBtn.className = 'btn btn-sm btn-outline btn-warning ml-2';
+                limparBtn.innerHTML = '🗑️ Limpar Seleção';
+                limparBtn.onclick = limparSelecao;
+                contador.appendChild(limparBtn);
+            }
+        } else {
+            const btnLimpar = document.getElementById('btnLimpar');
+            if (btnLimpar) {
+                btnLimpar.remove();
+            }
         }
-    } else {
+
+        // Desabilitar outros checkboxes se já tem 3 selecionados
+        if (selecionados.length >= 3) {
+            checkboxes.forEach(cb => {
+                if (!cb.checked) {
+                    cb.disabled = true;
+                }
+            });
+            contador.classList.add('text-warning');
+        } else {
+            checkboxes.forEach(cb => {
+                cb.disabled = false;
+            });
+            contador.classList.remove('text-warning');
+        }
+
+        // Habilitar/desabilitar botão submit
+        btnSubmit.disabled = selecionados.length === 0;
+    }
+
+    function limparSelecao() {
+        const checkboxes = document.querySelectorAll('input[name="livros_ids[]"]');
+        checkboxes.forEach(cb => {
+            cb.checked = false;
+            cb.disabled = false;
+        });
+
+        const contador = document.getElementById('contador');
+        contador.innerHTML = '0/3 livros selecionados';
+        contador.classList.remove('text-warning');
+
         const btnLimpar = document.getElementById('btnLimpar');
         if (btnLimpar) {
             btnLimpar.remove();
         }
-    }
-    
-    // Desabilitar outros checkboxes se já tem 3 selecionados
-    if (selecionados.length >= 3) {
-        checkboxes.forEach(cb => {
-            if (!cb.checked) {
-                cb.disabled = true;
-            }
-        });
-        contador.classList.add('text-warning');
-    } else {
-        checkboxes.forEach(cb => {
-            cb.disabled = false;
-        });
-        contador.classList.remove('text-warning');
-    }
-    
-    // Habilitar/desabilitar botão submit
-    btnSubmit.disabled = selecionados.length === 0;
-}
 
-function limparSelecao() {
-    const checkboxes = document.querySelectorAll('input[name="livros_ids[]"]');
-    checkboxes.forEach(cb => {
-        cb.checked = false;
-        cb.disabled = false;
-    });
-    
-    const contador = document.getElementById('contador');
-    contador.innerHTML = '0/3 livros selecionados';
-    contador.classList.remove('text-warning');
-    
-    const btnLimpar = document.getElementById('btnLimpar');
-    if (btnLimpar) {
-        btnLimpar.remove();
+        document.getElementById('btnSubmit').disabled = true;
     }
-    
-    document.getElementById('btnSubmit').disabled = true;
-}
 </script>
