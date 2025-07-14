@@ -192,18 +192,20 @@ class LivroController extends Controller
             ->with('success', 'Livro criado com sucesso!');
     }
 
-    public function show(Livro $livro)
-    {
-        $livro->load([
-            'editora',
-            'autores',
-            'requisicoes' => function ($query) {
-                $query->with('user')->orderBy('created_at', 'desc');
-            }
-        ]);
+  public function show(Livro $livro)
+{
+    // A linha abaixo carrega as relações de forma um pouco diferente,
+    // o que pode ser mais robusto em certos cenários.
+    // Primeiro carrega o básico, depois as requisições.
+    $livro->load('editora', 'autores');
+    
+    $livro->load(['requisicoes' => function ($query) {
+        $query->with('user')->orderBy('created_at', 'desc');
+    }]);
 
-       
-    }
+    // Agora, passamos para a view.
+    return view('livros.show', compact('livro'));
+}
 
     public function edit(Livro $livro)
     {

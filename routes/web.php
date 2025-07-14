@@ -28,7 +28,7 @@ Route::middleware([
 
     // Consulta à Biblioteca (Cidadão pode ver listas e detalhes)
     Route::get('/livros', [LivroController::class, 'index'])->name('livros.index');
-    // Route::get('/livros/{livro}', [LivroController::class, 'show'])->name('livros.show'); // Temporariamente desativada
+    Route::get('/livros/{livro}', [LivroController::class, 'show'])->name('livros.show'); // Temporariamente desativada
     Route::get('/autores', [AutorController::class, 'index'])->name('autores.index');
     Route::get('/editoras', [EditoraController::class, 'index'])->name('editoras.index');
 
