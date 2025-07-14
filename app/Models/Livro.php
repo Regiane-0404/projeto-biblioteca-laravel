@@ -2,9 +2,13 @@
 
 namespace App\Models;
 
+use App\Traits\Encryptable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use App\Traits\Encryptable;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Livro extends Model
 {
@@ -22,44 +26,30 @@ class Livro extends Model
         'ativo' => 'boolean',
     ];
 
-    // Scope para livros ativos
-    public function scopeAtivos($query)
-    {
-        return $query->where('ativo', true);
-    }
-
-    // Scope para livros inativos  
-    public function scopeInativos($query)
-    {
-        return $query->where('ativo', false);
-    }
-
-    // Verificar se tem dependências que impedem exclusão
-    public function temDependencias()
-    {
-        // Verificar se tem autores associados
-        if ($this->autores()->count() > 0) {
-            return true;
-        }
-
-      
-
-        return false;
-    }
-
-    // Verificar se pode ser excluído
-    public function podeSerExcluido()
-    {
-        return !$this->temDependencias();
-    }
-
-    public function editora()
+    // RELAÇÕES
+    public function editora(): BelongsTo
     {
         return $this->belongsTo(Editora::class);
     }
 
-    public function autores()
+    public function autores(): BelongsToMany
     {
         return $this->belongsToMany(Autor::class, 'autor_livro');
+    }
+
+    public function requisicoes(): HasMany
+    {
+        return $this->hasMany(Requisicao::class);
+    }
+
+    public function requisicaoAtiva(): HasOne
+    {
+        return $this->hasOne(Requisicao::class)->whereIn('status', ['solicitado', 'aprovado']);
+    }
+
+    // MÉTODOS HELPER
+    public function isDisponivel(): bool
+    {
+        return !$this->requisicaoAtiva()->exists();
     }
 }

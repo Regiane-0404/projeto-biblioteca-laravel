@@ -4,15 +4,19 @@
             <h2 class="text-2xl font-bold text-base-content">
                 🏢 Editoras
             </h2>
-            <a href="{{ route('editoras.create') }}" class="btn btn-primary">
-                ➕ Nova Editora
-            </a>
+
+            {{-- Botão visível apenas para admins --}}
+            @if (Auth::user()->role === 'admin')
+                <a href="{{ route('editoras.create') }}" class="btn btn-primary">
+                    ➕ Nova Editora
+                </a>
+            @endif
         </div>
     </x-slot>
 
     <div class="py-6">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            
+
             <!-- Mensagens -->
             @if(session('success'))
                 <div class="alert alert-success mb-6">
@@ -35,10 +39,10 @@
             <!-- Card Principal -->
             <div class="card bg-base-100 shadow-xl">
                 <div class="card-body">
-                    
+
                     <!-- Pesquisa -->
                     <div class="flex flex-col lg:flex-row gap-4 mb-6">
-                        
+
                         <!-- Barra de Pesquisa -->
                         <form method="GET" action="{{ route('editoras.index') }}" class="flex-1">
                             <div class="join w-full">
@@ -53,7 +57,7 @@
                                     Pesquisar
                                 </button>
                             </div>
-                            
+
                             <!-- Manter ordenação -->
                             <input type="hidden" name="order_by" value="{{ request('order_by') }}">
                             <input type="hidden" name="order_direction" value="{{ request('order_direction') }}">
@@ -81,11 +85,11 @@
 
                     <!-- Lista de Editoras -->
                     @if($editoras->count() > 0)
-                        
+
                         <!-- Cabeçalho -->
                         <div class="flex justify-between items-center mb-4">
                             <h3 class="text-lg font-semibold">Lista de Editoras</h3>
-                            
+
                             <!-- Ordenação -->
                             <div class="dropdown dropdown-end">
                                 <div tabindex="0" role="button" class="btn btn-ghost btn-sm">
@@ -120,7 +124,7 @@
                         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                             @foreach($editoras as $editora)
                                 <div class="card bg-base-100 shadow-lg hover:shadow-xl transition-all duration-200 border border-base-300">
-                                    
+
                                     <!-- Logotipo da Editora -->
                                     <figure class="px-6 pt-6">
                                         @if($editora->logotipo)
@@ -133,45 +137,50 @@
                                             </div>
                                         @endif
                                     </figure>
-                                    
+
                                     <!-- Informações -->
                                     <div class="card-body text-center p-4">
                                         <h3 class="card-title text-lg justify-center">{{ $editora->nome }}</h3>
-                                        
+
                                         <!-- Estatísticas -->
                                         <div class="text-sm text-base-content/60 mb-3">
                                             <p>{{ $editora->livros->count() }} {{ $editora->livros->count() === 1 ? 'livro' : 'livros' }}</p>
                                             <p class="text-xs">Desde {{ $editora->created_at->format('M Y') }}</p>
                                         </div>
-                                        
+
                                         <!-- Ações -->
                                         <div class="card-actions justify-center gap-1">
-                                            <a href="{{ route('editoras.edit', $editora) }}" 
-                                               class="btn btn-ghost btn-sm hover:bg-warning hover:text-white" 
-                                               title="Editar">
-                                                ✏️
-                                            </a>
-                                            <form method="POST" action="{{ route('editoras.destroy', $editora) }}" class="inline">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" 
-                                                        class="btn btn-ghost btn-sm hover:bg-error hover:text-white" 
-                                                        title="Excluir"
-                                                        onclick="return confirm('Tem certeza que deseja excluir {{ $editora->nome }}?')">
-                                                    🗑️
-                                                </button>
-                                            </form>
-                                        </div>
-                                    </div>
-                                </div>
+
+                                            {{-- Botões visíveis apenas para admins --}}
+                                            @if (Auth::user()->role === 'admin')
+                                                <a href="{{ route('editoras.edit', $editora) }}" 
+                                                   class="btn btn-ghost btn-sm hover:bg-warning hover:text-white" 
+                                                   title="Editar">
+                                                    ✏️
+                                                </a>
+                                                <form method="POST" action="{{ route('editoras.destroy', $editora) }}" class="inline">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" 
+                                                            class="btn btn-ghost btn-sm hover:bg-error hover:text-white" 
+                                                            title="Excluir"
+                                                            onclick="return confirm('Tem certeza que deseja excluir {{ $editora->nome }}?')">
+                                                        🗑️
+                                                    </button>
+                                                </form>
+                                            @endif
+
+                                        </div> <!-- Fim card-actions -->
+                                    </div> <!-- Fim card-body -->
+                                </div> <!-- Fim card -->
                             @endforeach
                         </div>
 
                         <!-- Paginação -->
                         <div class="flex justify-center mt-8">
-                            {{ $editoras->links() }}
+                            {{ $editoras->appends(request()->all())->links() }}
                         </div>
-                        
+
                     @else
                         <!-- Estado Vazio -->
                         <div class="text-center py-12">
@@ -186,8 +195,10 @@
                             @endif
                         </div>
                     @endif
-                </div>
-            </div>
+
+                </div> <!-- Fim card-body principal -->
+            </div> <!-- Fim card principal -->
+
         </div>
     </div>
 </x-app-layout>

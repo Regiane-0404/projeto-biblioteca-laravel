@@ -27,6 +27,37 @@
                         </ul>
                     </details>
                 </li>
+                {{--<li>
+                    <details>
+                        <summary>👥 Usuários</summary>
+                        <ul class="p-2 bg-base-100 rounded-t-none">
+                            <li><a href="{{ route('users.index') }}">👥 Listar Usuários</a></li>
+                            <li><a href="{{ route('users.create') }}">➕ Novo Usuário</a></li>
+                        </ul>
+                    </details>
+                </li>--}}
+                {{-- Só mostra o menu "Usuários" se o utilizador for admin --}}
+                    @if (Auth::user()->role === 'admin')
+                        <li>
+                            <details>
+                                <summary>👥 Usuários</summary>
+                                <ul class="p-2 bg-base-100 rounded-t-none">
+                                    <li><a href="{{ route('users.index') }}">👥 Listar Usuários</a></li>
+                                    <li><a href="{{ route('users.create') }}">➕ Novo Usuário</a></li>
+                                </ul>
+                            </details>
+                        </li>
+                    @endif
+                <li>
+                    <details>
+                        <summary>📋 Requisições</summary>
+                        <ul class="p-2 bg-base-100 rounded-t-none">
+                            <li><a href="{{ route('requisicoes.index') }}">📋 Minhas Requisições</a></li>
+                            <li><a href="{{ route('requisicoes.create') }}">➕ Nova Requisição</a></li>
+                        </ul>
+                    </details>
+                </li>
+                
             </ul>
         </div>
     </div>
@@ -88,6 +119,13 @@
                 <li><a href="{{ route('livros.index') }}">📖 Livros</a></li>
                 <li><a href="{{ route('autores.index') }}">✍️ Autores</a></li>
                 <li><a href="{{ route('editoras.index') }}">🏢 Editoras</a></li>
+                <li><a href="{{ route('requisicoes.index') }}">📋 Requisições</a></li>
+                {{--<li><a href="{{ route('users.index') }}">👥 Usuários</a></li>--}}
+                {{-- Também esconde o link no menu mobile --}}
+                @if (Auth::user()->role === 'admin')
+                    <li><a href="{{ route('users.index') }}">👥 Usuários</a></li>
+                @endif
+
             </ul>
         </div>
     </div>

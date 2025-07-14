@@ -1,275 +1,174 @@
 <x-app-layout>
     <x-slot name="header">
         <div class="flex justify-between items-center">
-    <h2 class="text-2xl font-bold text-base-content">
-        📖 Livros
-    </h2>
-    <div class="flex gap-2">
-        <a href="{{ route('livros.create') }}" class="btn btn-primary">
-            ➕ Novo Livro
-        </a>
-        <a href="{{ route('livros.exportar', request()->query()) }}" class="btn btn-success">
-            📊 Exportar CSV
-        </a>
-    </div>
-</div>
+            <h2 class="text-2xl font-bold text-base-content">
+                📖 Livros Cadastrados
+            </h2>
+
+            {{-- Só mostra os botões de ação se o utilizador for admin --}}
+            @if (auth()->user()->role === 'admin')
+                <div class="flex gap-2">
+                    <a href="{{ route('livros.create') }}" class="btn btn-primary">
+                        ➕ Novo Livro
+                    </a>
+                    <a href="{{ route('livros.exportar', request()->query()) }}" class="btn btn-success">
+                        📊 Exportar CSV
+                    </a>
+                </div>
+            @endif
+        </div>
     </x-slot>
 
     <div class="py-6">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            
-            <!-- Mensagens de Feedback Completas -->
-        @if(session('success'))
-            <div class="alert alert-success mb-6">
-                <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <span>{{ session('success') }}</span>
-            </div>
-        @endif
 
-        @if(session('error'))
-            <div class="alert alert-error mb-6">
-                <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <span style="white-space: pre-line;">{{ session('error') }}</span>
-            </div>
-        @endif
+            <!-- Mensagens de Feedback -->
+            @if(session('success'))
+                <div role="alert" class="alert alert-success mb-6">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    <span>{{ session('success') }}</span>
+                </div>
+            @endif
+            @if(session('error'))
+                <div role="alert" class="alert alert-error mb-6">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    <span>{{ session('error') }}</span>
+                </div>
+            @endif
+            @if(session('warning'))
+                 <div role="alert" class="alert alert-warning mb-6">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                    <span>{{ session('warning') }}</span>
+                </div>
+            @endif
 
-        @if(session('warning'))
-            <div class="alert alert-warning mb-6">
-                <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                </svg>
-                <span>{{ session('warning') }}</span>
-            </div>
-        @endif
-
-            <!-- Card Principal -->
+            <!-- Card Principal com Tabela -->
             <div class="card bg-base-100 shadow-xl">
                 <div class="card-body">
-                    
-                    <!-- Filtros e Pesquisa -->
-                    <div class="flex flex-col lg:flex-row gap-4 mb-6">
-                        
-                        <!-- Pesquisa -->
-                        <form method="GET" action="{{ route('livros.index') }}" class="flex-1">
-                            <div class="join w-full">
-                                <input 
-                                    type="text" 
-                                    name="search" 
-                                    value="{{ request('search') }}"
-                                    placeholder="🔍 Pesquisar por nome ou ISBN..." 
-                                    class="input input-bordered join-item flex-1"
-                                />
-                                <button type="submit" class="btn btn-primary join-item">
-                                    Pesquisar
-                                </button>
+                
+                    <!-- Formulário de Filtros e Pesquisa -->
+                    <form method="GET" action="{{ route('livros.index') }}" class="mb-6">
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                            <!-- Pesquisa -->
+                            <div class="form-control md:col-span-2">
+                                <label class="label"><span class="label-text">Pesquisar por Título ou ISBN</span></label>
+                                <input type="text" name="search" value="{{ request('search') }}" placeholder="Digite para pesquisar..." class="input input-bordered w-full">
                             </div>
-                            
-                            <!-- Manter outros filtros -->
-                            <input type="hidden" name="editora" value="{{ request('editora') }}">
-                            <input type="hidden" name="order_by" value="{{ request('order_by') }}">
-                            <input type="hidden" name="order_direction" value="{{ request('order_direction') }}">
-                        </form>
+                            <!-- Filtro por Editora -->
+                            <div class="form-control">
+                                <label class="label"><span class="label-text">Filtrar por Editora</span></label>
+                                <select name="editora" class="select select-bordered w-full">
+                                    <option value="">Todas</option>
+                                    @foreach($editoras as $editora)
+                                        <option value="{{ $editora->id }}" {{ request('editora') == $editora->id ? 'selected' : '' }}>
+                                            {{ $editora->nome }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <!-- Ações do Formulário -->
+                            <div class="flex gap-2">
+                                <button type="submit" class="btn btn-primary flex-grow">🔍 Filtrar</button>
+                                <a href="{{ route('livros.index') }}" class="btn btn-outline" title="Limpar Filtros">🔄</a>
+                            </div>
+                        </div>
+                    </form> {{-- << FIM DO FORMULÁRIO --}}
 
-                        <!-- Filtro por Editora -->
-                        <form method="GET" action="{{ route('livros.index') }}" class="min-w-[200px]">
-                            <select name="editora" class="select select-bordered w-full" onchange="this.form.submit()">
-                                <option value="">🏢 Todas as Editoras</option>
-                                @foreach($editoras as $editora)
-                                    <option value="{{ $editora->id }}" {{ request('editora') == $editora->id ? 'selected' : '' }}>
-                                        {{ $editora->nome }}
-                                    </option>
-                                @endforeach
-                            </select>
-                            
-                            <!-- Manter outros filtros -->
-                            <input type="hidden" name="search" value="{{ request('search') }}">
-                            <input type="hidden" name="order_by" value="{{ request('order_by') }}">
-                            <input type="hidden" name="order_direction" value="{{ request('order_direction') }}">
-                        </form>
-
-                        <!-- Botão Limpar Filtros -->
-                        @if(request('search') || request('editora'))
-                            <a href="{{ route('livros.index') }}" class="btn btn-ghost">
-                                🗑️ Limpar
-                            </a>
-                        @endif
+                    <!-- Botões de Status (Ativo, Inativo, Todos) -->
+                    <div class="flex justify-start gap-2 mb-6 border-t pt-4 mt-4">
+                        <a href="{{ route('livros.index', array_merge(request()->query(), ['status' => 'ativo'])) }}" 
+                           class="btn btn-sm {{ request('status', 'ativo') == 'ativo' ? 'btn-success' : 'btn-ghost' }}">
+                            Ativos
+                        </a>
+                        <a href="{{ route('livros.index', array_merge(request()->query(), ['status' => 'inativo'])) }}" 
+                           class="btn btn-sm {{ request('status') == 'inativo' ? 'btn-warning' : 'btn-ghost' }}">
+                            Inativos
+                        </a>
+                        <a href="{{ route('livros.index', array_merge(request()->query(), ['status' => 'todos'])) }}" 
+                           class="btn btn-sm {{ request('status') == 'todos' ? 'btn-ghost' : 'btn-ghost' }}">
+                            Todos
+                        </a>
                     </div>
 
-                    <!-- Estatísticas -->
-                    <div class="stats stats-horizontal shadow mb-6">
-                        <div class="stat">
-                            <div class="stat-title">Total de Livros</div>
-                            <div class="stat-value text-primary">{{ $livros->total() }}</div>
-                        </div>
-                        <div class="stat">
-                            <div class="stat-title">Mostrando</div>
-                            <div class="stat-value text-sm">{{ $livros->firstItem() ?? 0 }} - {{ $livros->lastItem() ?? 0 }}</div>
-                        </div>
-                    </div>
-
-                    <!-- Tabela -->
-                  <!-- Tabela -->
-                    @if($livros->count() > 0)
-                        <div class="overflow-x-auto">
-                            <table class="table w-full">
-                                <thead>
-                                    <tr class="border-b-2">
-                                        <th class="text-left">
-                                            <a href="{{ route('livros.index', array_merge(request()->query(), ['order_by' => 'nome', 'order_direction' => request('order_direction') == 'asc' ? 'desc' : 'asc'])) }}" 
-                                               class="flex items-center gap-2 hover:text-primary">
-                                                📖 Nome
-                                                @if(request('order_by') == 'nome')
-                                                    <span class="text-xs">{{ request('order_direction') == 'asc' ? '↑' : '↓' }}</span>
-                                                @endif
-                                            </a>
-                                        </th>
-                                        <th class="text-left">
-                                            <a href="{{ route('livros.index', array_merge(request()->query(), ['order_by' => 'isbn', 'order_direction' => request('order_direction') == 'asc' ? 'desc' : 'asc'])) }}" 
-                                               class="flex items-center gap-2 hover:text-primary">
-                                                🏷️ ISBN
-                                                @if(request('order_by') == 'isbn')
-                                                    <span class="text-xs">{{ request('order_direction') == 'asc' ? '↑' : '↓' }}</span>
-                                                @endif
-                                            </a>
-                                        </th>
-                                        <th class="text-left">🏢 Editora</th>
-                                        <th class="text-left">✍️ Autores</th>
-                                        <th class="text-left">
-                                            <a href="{{ route('livros.index', array_merge(request()->query(), ['order_by' => 'preco', 'order_direction' => request('order_direction') == 'asc' ? 'desc' : 'asc'])) }}" 
-                                               class="flex items-center gap-2 hover:text-primary">
-                                                💰 Preço
-                                                @if(request('order_by') == 'preco')
-                                                    <span class="text-xs">{{ request('order_direction') == 'asc' ? '↑' : '↓' }}</span>
-                                                @endif
-                                            </a>
-                                        </th>
-                                        <th class="text-left">🔧 Ações</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach($livros as $livro)
-                                        <tr class="hover:bg-base-200 border-b">
-                                            <!-- Nome do Livro -->
-                                            <td class="py-4">
-                                                <div class="flex items-center gap-3">
-                                                    @if($livro->imagem_capa)
-                                                        <div class="avatar">
-                                                            <div class="mask mask-squircle w-12 h-12">
-                                                                <img src="{{ asset('storage/' . $livro->imagem_capa) }}" alt="Capa" />
-                                                            </div>
-                                                        </div>
-                                                    @else
-                                                        <div class="avatar placeholder">
-                                                            <div class="bg-neutral text-neutral-content rounded-lg w-12 h-12">
-                                                                <span class="text-xl">📚</span>
-                                                            </div>
-                                                        </div>
-                                                    @endif
-                                                    <div class="max-w-xs">
-                                                        <div class="font-bold text-base-content">{{ $livro->nome }}</div>
-                                                        @if($livro->bibliografia)
-                                                            <div class="text-sm text-base-content/70 line-clamp-2">
-                                                                {{ Str::limit($livro->bibliografia, 60) }}
-                                                            </div>
+                    <!-- Tabela de Livros -->
+                    <div class="overflow-x-auto">
+                        <table class="table table-zebra w-full">
+                            <thead>
+                                <tr>
+                                    <th>Livro / ISBN</th>
+                                    <th>Editora</th>
+                                    <th>Autores</th>
+                                    <th class="text-right">Preço</th>
+                                    <th>Status</th>
+                                    <th class="w-1">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse($livros as $livro)
+                                    <tr class="hover">
+                                        <td>
+                                            <div class="flex items-center gap-3">
+                                                <div class="avatar">
+                                                    <div class="mask mask-squircle w-12 h-12">
+                                                        @if($livro->imagem_capa && Storage::disk('public')->exists($livro->imagem_capa))
+                                                            <img src="{{ asset('storage/' . $livro->imagem_capa) }}" alt="Capa de {{ $livro->nome }}">
+                                                        @else
+                                                            <div class="w-12 h-12 bg-base-200 flex items-center justify-center"><span class="text-xl opacity-40">📚</span></div>
                                                         @endif
                                                     </div>
                                                 </div>
-                                            </td>
-                                            
-                                            <!-- ISBN -->
-                                            <td class="py-4">
-                                                <div class="font-mono text-sm text-base-content break-all">
-                                                    {{ $livro->isbn }}
+                                                <div>
+                                                    <div class="font-bold">{{ $livro->nome }}</div>
+                                                    <div class="text-sm opacity-50">{{ $livro->isbn }}</div>
                                                 </div>
-                                            </td>
-                                            
-                                            <!-- Editora -->
-                                            <td class="py-4">
-                                                @if($livro->editora)
-                                                    <div class="badge badge-ghost badge-sm">
-                                                        {{ Str::limit($livro->editora->nome, 15) }}
-                                                    </div>
-                                                @else
-                                                    <span class="text-base-content/50">Sem editora</span>
+                                            </div>
+                                        </td>
+                                        <td>{{ $livro->editora->nome ?? 'N/A' }}</td>
+                                        <td>{{ $livro->autores->pluck('nome')->join(', ') ?: 'N/A' }}</td>
+                                        <td class="font-mono text-right">€{{ number_format($livro->preco, 2, ',', '.') }}</td>
+                                        <td>
+                                            @if($livro->ativo)
+                                                <span class="badge badge-success badge-outline">Ativo</span>
+                                            @else
+                                                <span class="badge badge-warning badge-outline">Inativo</span>
+                                            @endif
+                                        </td>
+                                        <td>
+                                            <div class="flex gap-2">
+                                                <button class="btn btn-sm btn-outline btn-accent" title="Ver Detalhes (Em Desenvolvimento)" disabled>👁️</button>
+                                                @if(auth()->user()->role === 'admin')
+                                                    <a href="{{ route('livros.edit', $livro->id) }}" class="btn btn-sm btn-outline btn-info" title="Editar">✏️</a>
+                                                    
+                                                    @if($livro->ativo)
+                                                        <form action="{{ route('livros.inativar', $livro->id) }}" method="POST" onsubmit="return confirm('Tem a certeza que deseja inativar este livro?')">
+                                                            @csrf @method('PATCH')
+                                                            <button type="submit" class="btn btn-sm btn-outline btn-warning" title="Inativar">⚠️</button>
+                                                        </form>
+                                                    @else
+                                                        <form action="{{ route('livros.ativar', $livro->id) }}" method="POST">
+                                                            @csrf @method('PATCH')
+                                                            <button type="submit" class="btn btn-sm btn-outline btn-success" title="Ativar">✅</button>
+                                                        </form>
+                                                    @endif
                                                 @endif
-                                            </td>
-                                            
-                                            <!-- Autores -->
-                                            <td class="py-4">
-                                                @if($livro->autores->count() > 0)
-                                                    <div class="flex flex-wrap gap-1">
-                                                        @foreach($livro->autores as $autor)
-                                                            <div class="badge badge-ghost badge-sm">
-                                                                {{ Str::limit($autor->nome, 12) }}
-                                                            </div>
-                                                        @endforeach
-                                                    </div>
-                                                @else
-                                                    <span class="text-base-content/50">Sem autores</span>
-                                                @endif
-                                            </td>
-                                            
-                                            <!-- Preço -->
-                                            <td class="py-4">
-                                                <span class="font-bold text-success">
-                                                    €{{ number_format($livro->preco, 2, ',', '.') }}
-                                                </span>
-                                            </td>
-                                            
-                                            <!-- Ações -->
-                                            <td class="py-4">
-                                                <div class="flex gap-1">
-                                                    <a href="{{ route('livros.show', $livro) }}" 
-                                                       class="btn btn-ghost btn-sm hover:bg-info hover:text-white" 
-                                                       title="Visualizar">
-                                                        👁️
-                                                    </a>
-                                                    <a href="{{ route('livros.edit', $livro) }}" 
-                                                       class="btn btn-ghost btn-sm hover:bg-warning hover:text-white" 
-                                                       title="Editar">
-                                                        ✏️
-                                                    </a>
-                                                    <form method="POST" action="{{ route('livros.destroy', $livro) }}" class="inline">
-                                                        @csrf
-                                                        @method('DELETE')
-                                                        <button type="submit" 
-                                                                class="btn btn-ghost btn-sm hover:bg-error hover:text-white" 
-                                                                title="Excluir"
-                                                                onclick="return confirm('Tem certeza que deseja excluir este livro?')">
-                                                            🗑️
-                                                        </button>
-                                                    </form>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
-                        </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="6" class="text-center py-8">
+                                            <p class="text-lg text-base-content/50">Nenhum livro encontrado com os filtros atuais.</p>
+                                        </td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
 
-                        <!-- Paginação -->
-                        <div class="flex justify-center mt-6">
-                            {{ $livros->links() }}
-                        </div>
-                        
-                    @else
-                        <!-- Estado Vazio -->
-                        <div class="text-center py-12">
-                            <div class="text-6xl opacity-20 mb-4">📚</div>
-                            <h3 class="text-xl font-bold mb-2">Nenhum livro encontrado</h3>
-                            @if(request('search') || request('editora'))
-                                <p class="text-base-content/60 mb-4">Tente ajustar os filtros ou limpar a pesquisa</p>
-                                <a href="{{ route('livros.index') }}" class="btn btn-ghost">Limpar Filtros</a>
-                            @else
-                                <p class="text-base-content/60 mb-4">Comece adicionando seu primeiro livro</p>
-                                <a href="{{ route('livros.create') }}" class="btn btn-primary">➕ Adicionar Primeiro Livro</a>
-                            @endif
-                        </div>
-                    @endif
+                    <!-- Paginação -->
+                    <div class="mt-6">
+                        {{ $livros->links() }}
+                    </div>
                 </div>
             </div>
         </div>

@@ -4,9 +4,15 @@
             <h2 class="text-2xl font-bold text-base-content">
                 ✍️ Autores
             </h2>
-            <a href="{{ route('autores.create') }}" class="btn btn-primary">
-                ➕ Novo Autor
-            </a>
+            {{-- Só mostra os botões de ação se o utilizador for admin --}}
+            {{-- BLOCO CORRIGIDO --}}
+                @if (Auth::user()->role === 'admin')
+            <div class="flex justify-end mb-4">
+                <a href="{{ route('autores.create') }}" class="btn btn-primary">
+                       ➕ Novo Autor
+               </a>
+                    </div>
+                @endif
         </div>
     </x-slot>
 
@@ -146,24 +152,29 @@
                                         
                                         <!-- Ações -->
                                         <div class="card-actions justify-center gap-1">
-                                            <a href="{{ route('autores.edit', $autor) }}" 
-                                               class="btn btn-ghost btn-sm hover:bg-warning hover:text-white" 
-                                               title="Editar">
-                                                ✏️
-                                            </a>
-                                            <form method="POST" action="{{ route('autores.destroy', $autor) }}" class="inline">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" 
-                                                        class="btn btn-ghost btn-sm hover:bg-error hover:text-white" 
-                                                        title="Excluir"
-                                                        onclick="return confirm('Tem certeza que deseja excluir {{ $autor->nome }}?')">
-                                                    🗑️
-                                                </button>
-                                            </form>
-                                        </div>
-                                    </div>
-                                </div>
+                                            {{-- Só mostra os botões de ação se o utilizador for admin --}}
+                                            @if (Auth::user()->role === 'admin')
+                                                <a href="{{ route('autores.edit', $autor) }}" 
+                                                   class="btn btn-ghost btn-sm hover:bg-warning hover:text-white" 
+                                                   title="Editar">
+                                                    ✏️
+                                                </a>
+                                                <form method="POST" action="{{ route('autores.destroy', $autor) }}" class="inline">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" 
+                                                            class="btn btn-ghost btn-sm hover:bg-error hover:text-white" 
+                                                            title="Excluir"
+                                                            onclick="return confirm('Tem certeza que deseja excluir {{ $autor->nome }}?')">
+                                                        🗑️
+                                                    </button>
+                                                </form>
+                                            @else
+                                                <span class="text-gray-400 text-sm italic">Apenas visualização</span>
+                                            @endif
+                                        </div> <!-- Fim card-actions -->
+                                    </div> <!-- Fim card-body -->
+                                </div> <!-- Fim card -->
                             @endforeach
                         </div>
 
@@ -186,8 +197,8 @@
                             @endif
                         </div>
                     @endif
-                </div>
-            </div>
+                </div> <!-- Fim card-body principal -->
+            </div> <!-- Fim card principal -->
         </div>
     </div>
 </x-app-layout>
