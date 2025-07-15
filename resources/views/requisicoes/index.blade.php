@@ -38,6 +38,58 @@
                 </div>
             @endif
 
+            <!-- ======================================================= -->
+            <!--   NOVO CARD DE FILTROS (APENAS PARA ADMIN) - ADICIONAR  -->
+            <!-- ======================================================= -->
+            @if (auth()->user()->role === 'admin')
+                <div class="card bg-base-200 shadow-md mb-6">
+                    <div class="card-body">
+                        <form method="GET" action="{{ route('requisicoes.index') }}">
+                            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+
+                                <!-- Filtro Data De -->
+                                <div class="form-control">
+                                    <label class="label"><span class="label-text">Requisições Desde:</span></label>
+                                    <input type="date" name="data_de" value="{{ $filtro_data_de ?? '' }}"
+                                        class="input input-bordered w-full">
+                                </div>
+
+                                <!-- Filtro Data Até -->
+                                <div class="form-control">
+                                    <label class="label"><span class="label-text">Até:</span></label>
+                                    <input type="date" name="data_ate" value="{{ $filtro_data_ate ?? '' }}"
+                                        class="input input-bordered w-full">
+                                </div>
+
+                                <!-- Filtro por Status -->
+                                <div class="form-control">
+                                    <label class="label"><span class="label-text">Filtrar por Status:</span></label>
+                                    <select name="status" class="select select-bordered w-full">
+                                        <option value="">Todos os Status</option>
+                                        <option value="solicitado" @if ($filtro_status == 'solicitado') selected @endif>
+                                            Solicitado</option>
+                                        <option value="aprovado" @if ($filtro_status == 'aprovado') selected @endif>
+                                            Aprovado (Em posse)</option>
+                                        <option value="devolvido" @if ($filtro_status == 'devolvido') selected @endif>
+                                            Devolvido</option>
+                                        <option value="cancelado" @if ($filtro_status == 'cancelado') selected @endif>
+                                            Cancelado</option>
+                                    </select>
+                                </div>
+
+                                <!-- Botões de Ação -->
+                                <div class="flex gap-2">
+                                    <button type="submit" class="btn btn-primary flex-grow">🔍 Filtrar</button>
+                                    <a href="{{ route('requisicoes.index') }}" class="btn btn-ghost"
+                                        title="Limpar Filtros e Ver Hoje">🔄</a>
+                                </div>
+
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            @endif
+
             <!-- Tabela de Requisições -->
             <div class="card bg-base-100 shadow-xl">
                 <div class="card-body">
@@ -71,9 +123,9 @@
                                             @if ($requisicao->status === 'solicitado')
                                                 <span class="badge badge-warning">🟡 Solicitado</span>
                                             @elseif ($requisicao->status === 'aprovado')
-                                                <span class="badge badge-info">🔵 Aprovado</span>
-                                            @elseif ($requisicao->status === 'entregue' || $requisicao->status === 'devolvido')
-                                                <span class="badge badge-success">✅ Concluído</span>
+                                                <span class="badge badge-info">🔵 Em posse</span>
+                                            @elseif ($requisicao->status === 'devolvido')
+                                                <span class="badge badge-success">✅ Devolvido</span>
                                             @elseif ($requisicao->status === 'cancelado')
                                                 <span class="badge badge-ghost">⚪ Cancelado</span>
                                             @endif
@@ -95,13 +147,11 @@
                                                         </form>
                                                     @endif
                                                     @if ($requisicao->status === 'aprovado')
-                                                        <!-- O botão que abre o modal. Usamos o onclick() do DaisyUI -->
                                                         <button class="btn btn-sm btn-info"
                                                             onclick="devolucao_modal_{{ $requisicao->id }}.showModal()">
                                                             📚 Registrar Devolução
                                                         </button>
 
-                                                        <!-- O Modal (fica escondido até ser chamado) -->
                                                         <dialog id="devolucao_modal_{{ $requisicao->id }}"
                                                             class="modal">
                                                             <div class="modal-box">
@@ -117,7 +167,6 @@
                                                                     @csrf
                                                                     @method('PATCH')
 
-                                                                    <!-- Campo de Data -->
                                                                     <div>
                                                                         <label class="label">
                                                                             <span class="label-text">Data de Devolução
@@ -129,29 +178,25 @@
                                                                             required>
                                                                     </div>
 
-                                                                    <!-- Campo de Observações -->
                                                                     <div>
                                                                         <label class="label">
                                                                             <span class="label-text">Observações
-                                                                                (opcional)</span>
+                                                                                (opcional)
+                                                                            </span>
                                                                         </label>
                                                                         <textarea name="observacoes" class="textarea textarea-bordered w-full"
                                                                             placeholder="Ex: Livro devolvido com uma pequena marca na capa..."></textarea>
                                                                     </div>
 
-                                                                    <!-- Botões de Ação do Modal -->
                                                                     <div class="modal-action">
-                                                                        <!-- Botão para fechar o modal -->
                                                                         <button type="button" class="btn"
                                                                             onclick="document.getElementById('devolucao_modal_{{ $requisicao->id }}').close()">Cancelar</button>
-                                                                        <!-- Botão para submeter o formulário -->
                                                                         <button type="submit"
                                                                             class="btn btn-primary">Confirmar
                                                                             Devolução</button>
                                                                     </div>
                                                                 </form>
                                                             </div>
-                                                            <!-- Fecha o modal se clicar fora -->
                                                             <form method="dialog" class="modal-backdrop">
                                                                 <button>close</button>
                                                             </form>
@@ -160,8 +205,8 @@
                                                 @else
                                                     {{-- Ações do CIDADÃO --}}
                                                     @if ($requisicao->status === 'solicitado')
-                                                        {{-- USAMOS A MESMA ROTA DE CANCELAR, O CONTROLLER VAI DECIDIR --}}
-                                                        <form action="{{ route('requisicoes.cancelar', $requisicao) }}"
+                                                        <form
+                                                            action="{{ route('requisicoes.cancelar', $requisicao) }}"
                                                             method="POST"
                                                             onsubmit="return confirm('Tem a certeza que deseja cancelar o seu pedido?')">
                                                             @csrf @method('DELETE')

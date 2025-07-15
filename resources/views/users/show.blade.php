@@ -70,6 +70,8 @@
                                             $statusClass = 'text-info';
                                         } elseif ($requisicao->status === 'solicitado') {
                                             $statusClass = 'text-warning';
+                                        } elseif ($requisicao->status === 'cancelado') {
+                                            $statusClass = 'text-gray-400';
                                         }
                                     @endphp
                                     <tr class="hover">
@@ -82,6 +84,10 @@
                                                 Atrasado
                                             @elseif($requisicao->status === 'aprovado')
                                                 Em posse
+                                            @elseif($requisicao->status === 'devolvido')
+                                                Devolvido
+                                            @elseif($requisicao->status === 'cancelado')
+                                                Cancelado
                                             @else
                                                 {{ ucfirst($requisicao->status) }}
                                             @endif
