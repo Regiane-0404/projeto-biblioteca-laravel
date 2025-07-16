@@ -70,7 +70,7 @@ class User extends Authenticatable
         return $this->hasMany(Requisicao::class);
     }
 
-    public function requisicaesAtivas(): HasMany // <-- ADICIONEI O TIPO DE RETORNO
+    public function requisicoesAtivas() // <-- NOME CORRIGIDO
     {
         return $this->hasMany(Requisicao::class)->whereIn('status', ['solicitado', 'aprovado']);
     }
