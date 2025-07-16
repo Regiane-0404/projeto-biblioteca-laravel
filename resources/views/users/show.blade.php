@@ -4,7 +4,6 @@
             <h2 class="text-xl font-semibold leading-tight text-gray-800">
                 👤 Detalhes do Usuário
             </h2>
-            <a href="{{ route('users.index') }}" class="btn btn-sm btn-outline">⬅️ Voltar para a Lista</a>
         </div>
     </x-slot>
 
@@ -57,7 +56,6 @@
                             <tbody>
                                 @forelse ($user->requisicoes as $requisicao)
                                     @php
-                                        // Lógica para determinar a cor do texto do status
                                         $isAtrasado =
                                             now()->isAfter($requisicao->data_fim_prevista) &&
                                             $requisicao->status === 'aprovado';
@@ -103,29 +101,12 @@
                             </tbody>
                         </table>
                     </div>
-
-                    <!-- Legenda -->
-                    <div class="mt-6 border-t pt-4 text-sm text-gray-600">
-                        <h4 class="font-semibold mb-2">Legenda de Status:</h4>
-                        <div class="flex flex-wrap gap-x-4 gap-y-2">
-                            <span class="flex items-center">
-                                <div class="w-3 h-3 rounded-full bg-warning mr-2"></div> Solicitado
-                            </span>
-                            <span class="flex items-center">
-                                <div class="w-3 h-3 rounded-full bg-info mr-2"></div> Em posse
-                            </span>
-                            <span class="flex items-center">
-                                <div class="w-3 h-3 rounded-full bg-success mr-2"></div> Devolvido
-                            </span>
-                            <span class="flex items-center">
-                                <div class="w-3 h-3 rounded-full bg-error mr-2"></div> Atrasado
-                            </span>
-                            <span class="flex items-center">
-                                <div class="w-3 h-3 rounded-full bg-gray-300 mr-2"></div> Cancelado
-                            </span>
-                        </div>
-                    </div>
                 </div>
+            </div>
+
+            <!-- NOVO LOCAL PARA O BOTÃO VOLTAR -->
+            <div class="mt-6 flex justify-end">
+                <a href="{{ route('users.index') }}" class="btn btn-outline">⬅️ Voltar para a Lista de Usuários</a>
             </div>
 
         </div>

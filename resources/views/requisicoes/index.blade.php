@@ -13,12 +13,21 @@
             @endif
 
             @if (auth()->user()->role === 'admin')
-                <div role="tablist" class="tabs tabs-boxed mb-6">
-                    <a role="tab"
-                        class="tab {{ ($active_tab ?? 'visao_geral') === 'visao_geral' ? 'tab-active' : '' }}"
-                        href="{{ route('requisicoes.index') }}">Visão Geral</a>
-                    <a role="tab" class="tab {{ ($active_tab ?? '') === 'lista' ? 'tab-active' : '' }}"
-                        href="{{ route('requisicoes.index', ['tab' => 'lista']) }}">Lista Completa</a>
+                <!-- ABAS COM ESTILO DE BOTÃO E CORES PADRONIZADAS -->
+                <div class="join mb-6">
+
+                    <!-- Aba 1: Visão Geral (Verde quando ativa) -->
+                    <a class="join-item btn btn-sm {{ ($active_tab ?? 'visao_geral') === 'visao_geral' ? 'btn-active btn-success' : 'btn-ghost' }}"
+                        href="{{ route('requisicoes.index') }}">
+                        Visão Geral
+                    </a>
+
+                    <!-- Aba 2: Lista Completa (Verde quando ativa) -->
+                    <a class="join-item btn btn-sm {{ $active_tab === 'lista' ? 'btn-active btn-success' : 'btn-ghost' }}"
+                        href="{{ route('requisicoes.index', ['tab' => 'lista']) }}">
+                        Lista Completa
+                    </a>
+
                 </div>
                 @if (($active_tab ?? 'visao_geral') === 'visao_geral')
                     <div class="bg-base-100 rounded-box p-6 shadow-xl">

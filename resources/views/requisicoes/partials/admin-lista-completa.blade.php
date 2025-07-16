@@ -105,7 +105,7 @@
                                 <dialog id="devolucao_modal_{{ $requisicao->id }}" class="modal">
                                     <div class="modal-box">
                                         <h3 class="font-bold text-lg">Registrar Devolução</h3>
-                                        <p class="py-2">Livro: <span
+                                        <p class="py-2 text-sm">Livro: <span
                                                 class="font-semibold">{{ $requisicao->livro->nome_visivel ?? 'N/A' }}</span>
                                         </p>
                                         <form method="POST" action="{{ route('requisicoes.entregar', $requisicao) }}"
@@ -118,15 +118,33 @@
                                                     class="input input-bordered w-full"
                                                     value="{{ now()->format('Y-m-d') }}" required>
                                             </div>
+
+                                            <!-- NOVO CAMPO ESTADO DO LIVRO -->
                                             <div>
-                                                <label class="label"><span
-                                                        class="label-text">Observações</span></label>
-                                                <textarea name="observacoes" class="textarea textarea-bordered w-full" placeholder="Opcional..."></textarea>
+                                                <label class="label">
+                                                    <span class="label-text">Estado do Livro na Devolução</span>
+                                                </label>
+                                                <select name="estado_devolucao" class="select select-bordered w-full"
+                                                    required>
+                                                    <option value="intacto">Intacto (Perfeito estado)</option>
+                                                    <option value="marcas_uso">Com pequenas marcas de uso</option>
+                                                    <option value="danificado">Danificado (Ex: rasgado, molhado)
+                                                    </option>
+                                                    <option value="nao_devolvido">Não foi devolvido</option>
+                                                </select>
+                                            </div>
+
+                                            <div>
+                                                <label class="label"><span class="label-text">Observações
+                                                        (opcional)</span></label>
+                                                <textarea name="observacoes" class="textarea textarea-bordered w-full"
+                                                    placeholder="Ex: Livro devolvido com uma pequena marca na capa..."></textarea>
                                             </div>
                                             <div class="modal-action">
                                                 <form method="dialog"><button class="btn btn-ghost">Cancelar</button>
                                                 </form>
-                                                <button type="submit" class="btn btn-neutral">Confirmar</button>
+                                                <button type="submit" class="btn btn-primary">Confirmar
+                                                    Devolução</button>
                                             </div>
                                         </form>
                                     </div>

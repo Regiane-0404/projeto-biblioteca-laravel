@@ -13,9 +13,16 @@ class Requisicao extends Model
     protected $table = 'requisicoes';
 
     protected $fillable = [
-        'numero_sequencial', 'user_id', 'livro_id', 'status', 
-        'data_inicio', 'data_fim_prevista', 'data_fim_real', 
-        'dias_atraso', 'observacoes'
+        'numero_sequencial',
+        'user_id',
+        'livro_id',
+        'status',
+        'data_inicio',
+        'data_fim_prevista',
+        'data_fim_real',
+        'dias_atraso',
+        'observacoes',
+        'estado_devolucao',
     ];
 
     protected $casts = [

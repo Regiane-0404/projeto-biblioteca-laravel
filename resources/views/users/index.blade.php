@@ -1,13 +1,8 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="flex justify-between items-center">
-            <h2 class="text-2xl font-bold text-base-content">
-                👥 Gestão de Usuários
-            </h2>
-            <a href="{{ route('users.create') }}" class="btn btn-primary">
-                ➕ Novo Usuário
-            </a>
-        </div>
+        <h2 class="text-2xl font-bold text-base-content">
+            👥 Gestão de Usuários
+        </h2>
     </x-slot>
 
     <div class="py-6">
@@ -117,6 +112,15 @@
                     <!-- Paginação -->
                     <div class="mt-6">
                         {{ $users->links() }}
+                    </div>
+
+                    <!-- ============================================= -->
+                    <!--     NOVO LINK PARA VOLTAR AO DASHBOARD        -->
+                    <!-- ============================================= -->
+                    <div class="mt-8 text-center">
+                        <a href="{{ route('dashboard') }}" class="link link-hover text-sm">
+                            ⬅️ Voltar ao Dashboard Principal
+                        </a>
                     </div>
                 </div>
             </div>

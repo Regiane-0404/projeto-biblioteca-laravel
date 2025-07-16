@@ -5,3 +5,21 @@
 [x-cloak] {
     display: none;
 }
+/* Adicione este código no final do seu resources/css/app.css */
+
+/*
+  Correção para Checkboxes na página de Requisição.
+  Garante que um checkbox selecionado (`:checked`) mas que esteja
+  desativado (`:disabled`) mantém a sua cor primária e opacidade total,
+  em vez de ficar esmaecido.
+*/
+.checkbox:disabled:checked {
+    background-color: hsl(var(--p)); /* Cor primária */
+    opacity: 1;
+    border-color: hsl(var(--p)); /* Cor da borda */
+}
+
+.checkbox:disabled:checked:hover {
+    background-color: hsl(var(--p));
+    border-color: hsl(var(--p));
+}

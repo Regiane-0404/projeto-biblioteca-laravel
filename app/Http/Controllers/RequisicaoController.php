@@ -132,24 +132,48 @@ class RequisicaoController extends Controller
         return back()->with('success', 'Requisição aprovada!');
     }
 
+
+
     public function entregar(Request $request, Requisicao $requisicao)
     {
+        // Apenas Admins podem confirmar a entrega
+        if (auth()->user()->role !== 'admin') {
+            abort(403, 'Ação não autorizada.');
+        }
+
+        // 1. Validamos os dados do formulário, incluindo o novo campo
         $validated = $request->validate([
             'data_fim_real' => 'required|date',
-            'observacoes' => 'nullable|string|max:500'
+            'observacoes' => 'nullable|string|max:500',
+            'estado_devolucao' => 'required|string|in:intacto,marcas_uso,danificado,nao_devolvido',
         ]);
+
+        // 2. Preparamos a lógica de cálculo (continua igual)
         $dataFimReal = Carbon::parse($validated['data_fim_real']);
-        $diasAtraso = $dataFimReal->isAfter($requisicao->data_fim_prevista)
-            ? $dataFimReal->diffInDays($requisicao->data_fim_prevista)
+        $dataFimPrevista = $requisicao->data_fim_prevista;
+        $diasAtraso = $dataFimReal->isAfter($dataFimPrevista)
+            ? $dataFimReal->diffInDays($dataFimPrevista)
             : 0;
+
+        // 3. Atualizamos a requisição, agora incluindo o 'estado_devolucao'
         $requisicao->update([
             'status' => 'devolvido',
             'data_fim_real' => $dataFimReal,
             'observacoes' => $validated['observacoes'],
-            'dias_atraso' => $diasAtraso
+            'dias_atraso' => $diasAtraso,
+            'estado_devolucao' => $validated['estado_devolucao'], // <-- GUARDAMOS A NOVA INFORMAÇÃO
         ]);
+
+        // Lógica futura para multas poderia vir aqui
+        // if ($validated['estado_devolucao'] === 'danificado' || $validated['estado_devolucao'] === 'nao_devolvido') {
+        //     // Chamar um serviço de multas, por exemplo
+        // }
+
         return back()->with('success', 'Devolução registrada com sucesso!');
     }
+
+
+
 
     public function cancelar(Requisicao $requisicao)
     {
