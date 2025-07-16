@@ -11,48 +11,55 @@ use App\Models\Requisicao;
 
 class DashboardController extends Controller
 {
-    // Este é o método que o ficheiro de rotas está à procura!
     public function index()
     {
         $user = Auth::user();
 
         if ($user->role === 'admin') {
-            // Se for admin, carrega o dashboard de admin (que já existe)
             return $this->adminDashboard();
         } else {
-            // Se for cidadão, carrega o novo dashboard de cidadão
             return $this->cidadaoDashboard();
         }
     }
 
-    /**
-     * Lógica para o dashboard do Admin.
-     */
     private function adminDashboard()
     {
-        // O dashboard do Admin continua a usar a vista 'dashboard' que já tínhamos.
-        return view('dashboard');
+        // O SEU DASHBOARD DE ADMIN CONTINUA A USAR A VIEW 'dashboard'
+        // PODEMOS MELHORÁ-LO DEPOIS, POR AGORA ESTÁ OK.
+        $stats = [
+            'livros_ativos' => Livro::where('ativo', true)->count(),
+            'autores' => Autor::count(),
+            'editoras' => Editora::count(),
+        ];
+        return view('dashboard', compact('stats'));
     }
 
-    /**
-     * Lógica para o dashboard do Cidadão.
-     */
     private function cidadaoDashboard()
     {
         $user = Auth::user();
 
-        // Estatísticas para o cidadão
-       $stats = [
-        'total_requisicoes' => $user->requisicoes()->count(), // <-- NOME CORRIGIDO
-        'requisicoes_ativas' => $user->requisicaesAtivas()->count(),
-        'livros_disponiveis' => Livro::whereDoesntHave('requisicaoAtiva')->count(),
+        $stats = [
+            'total_requisicoes' => $user->requisicoes()->count(),
+            // =======================================================
+            // CORREÇÃO 1: NOME DO MÉTODO CORRIGIDO
+            // =======================================================
+            'requisicoes_ativas' => $user->requisicoesAtivas()->count(), // Era 'requisicaesAtivas'
+            'livros_disponiveis' => Livro::whereDoesntHave('requisicaoAtiva')->count(),
         ];
 
-        // Pega as 5 requisições mais recentes para mostrar na lista
         $requisicoes_recentes = $user->requisicoes()->with('livro')->latest()->take(5)->get();
 
-        // Aqui está a chave: ele vai procurar um novo ficheiro de vista
-        // que ainda vamos criar.
+        // =======================================================
+        // CORREÇÃO 2: ADICIONAR LÓGICA DE DESENCRIPTAÇÃO
+        // =======================================================
+        $requisicoes_recentes->each(function ($requisicao) {
+            if ($requisicao->livro) {
+                // Força a desencriptação para que `->nome` funcione na view
+                $requisicao->livro->nome = $requisicao->livro->nome;
+            }
+        });
+
+        // Apontamos para a sua excelente view 'dashboard-cidadao'
         return view('dashboard-cidadao', compact('stats', 'requisicoes_recentes'));
     }
 }
