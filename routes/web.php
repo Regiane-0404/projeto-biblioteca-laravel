@@ -1,63 +1,100 @@
 <?php
 
-use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\LivroController;
-use App\Http\Controllers\AutorController;
-use App\Http\Controllers\EditoraController;
-use App\Http\Controllers\RequisicaoController;
-use App\Http\Controllers\UserController;
+use App\Http\Controllers\{
+    DashboardController,
+    LivroController,
+    AutorController,
+    EditoraController,
+    RequisicaoController,
+    UserController
+};
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 
-// Rota inicial
+/*
+|--------------------------------------------------------------------------
+| Rota Inicial
+|--------------------------------------------------------------------------
+*/
+
 Route::get('/', function () {
     return Auth::check() ? redirect()->route('dashboard') : redirect()->route('login');
 });
 
-// Rotas que exigem que o usuário esteja autenticado
+
+/*
+|--------------------------------------------------------------------------
+| Rotas protegidas por autenticação
+|--------------------------------------------------------------------------
+*/
 Route::middleware([
     'auth:sanctum',
     config('jetstream.auth_session'),
     'verified',
 ])->group(function () {
 
-    // --- ROTAS ACESSÍVEIS POR TODOS OS PERFIS LOGADOS ---
+    /*
+    |--------------------------------------------------------------------------
+    | ROTAS ACESSÍVEIS POR TODOS OS USUÁRIOS LOGADOS
+    |--------------------------------------------------------------------------
+    */
 
-    // Dashboard (Controller decide a view)
+    // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-    // Consulta à Biblioteca (Cidadão pode ver listas e detalhes)
+    // Livros (consulta geral e detalhes)
     Route::get('/livros', [LivroController::class, 'index'])->name('livros.index');
-    Route::get('/livros/{livro}', [LivroController::class, 'show'])->name('livros.show'); // Temporariamente desativada
+    Route::get('/livros/{livro}', [LivroController::class, 'show'])
+        ->where('livro', '[0-9]+') // Evita conflito com "create"
+        ->name('livros.show');
+
+    // Autores e Editoras (visualização pública)
     Route::get('/autores', [AutorController::class, 'index'])->name('autores.index');
     Route::get('/editoras', [EditoraController::class, 'index'])->name('editoras.index');
 
-    // Gestão de Requisições Pessoais
+    // Requisições do próprio usuário
     Route::get('/requisicoes', [RequisicaoController::class, 'index'])->name('requisicoes.index');
     Route::get('/requisicoes/create', [RequisicaoController::class, 'create'])->name('requisicoes.create');
     Route::post('/requisicoes', [RequisicaoController::class, 'store'])->name('requisicoes.store');
-    // Rota de cancelamento que serve para Admin e Cidadão
     Route::delete('/requisicoes/{requisicao}/cancelar', [RequisicaoController::class, 'cancelar'])->name('requisicoes.cancelar');
 
 
-    // --- ROTAS EXCLUSIVAS DO ADMIN ---
+    /*
+    |--------------------------------------------------------------------------
+    | ROTAS EXCLUSIVAS PARA ADMIN
+    |--------------------------------------------------------------------------
+    */
     Route::middleware(['admin'])->group(function () {
-        
-        // Gestão completa de Livros (tudo menos a consulta, que já está acima)
-        Route::resource('livros', LivroController::class)->except(['index', 'show']);
+
+        // LIVROS (gestão completa, exceto index/show que já estão acima)
+        Route::get('/livros/create', [LivroController::class, 'create'])->name('livros.create');
+        Route::post('/livros', [LivroController::class, 'store'])->name('livros.store');
+        Route::get('/livros/{livro}/edit', [LivroController::class, 'edit'])->name('livros.edit');
+        Route::put('/livros/{livro}', [LivroController::class, 'update'])->name('livros.update');
+        Route::delete('/livros/{livro}', [LivroController::class, 'destroy'])->name('livros.destroy');
         Route::patch('/livros/{livro}/inativar', [LivroController::class, 'inativar'])->name('livros.inativar');
         Route::patch('/livros/{livro}/ativar', [LivroController::class, 'ativar'])->name('livros.ativar');
         Route::get('/livros/exportar/csv', [LivroController::class, 'exportar'])->name('livros.exportar');
 
-        // Gestão de Autores e Editoras (tudo menos a consulta)
-        Route::resource('autores', AutorController::class)->except(['index', 'show']);
-        Route::resource('editoras', EditoraController::class)->except(['index', 'show']);
+        // AUTORES
+        Route::get('/autores/create', [AutorController::class, 'create'])->name('autores.create');
+        Route::post('/autores', [AutorController::class, 'store'])->name('autores.store');
+        Route::get('/autores/{autor}/edit', [AutorController::class, 'edit'])->name('autores.edit');
+        Route::put('/autores/{autor}', [AutorController::class, 'update'])->name('autores.update');
+        Route::delete('/autores/{autor}', [AutorController::class, 'destroy'])->name('autores.destroy');
 
-        // Gestão de Usuários
+        // EDITORAS
+        Route::get('/editoras/create', [EditoraController::class, 'create'])->name('editoras.create');
+        Route::post('/editoras', [EditoraController::class, 'store'])->name('editoras.store');
+        Route::get('/editoras/{editora}/edit', [EditoraController::class, 'edit'])->name('editoras.edit');
+        Route::put('/editoras/{editora}', [EditoraController::class, 'update'])->name('editoras.update');
+        Route::delete('/editoras/{editora}', [EditoraController::class, 'destroy'])->name('editoras.destroy');
+
+        // USUÁRIOS
         Route::resource('users', UserController::class);
         Route::patch('/users/{user}/toggle-status', [UserController::class, 'toggleStatus'])->name('users.toggle-status');
 
-        // Ações de Admin em Requisições
+        // Ações administrativas em requisições
         Route::patch('/requisicoes/{requisicao}/aprovar', [RequisicaoController::class, 'aprovar'])->name('requisicoes.aprovar');
         Route::patch('/requisicoes/{requisicao}/entregar', [RequisicaoController::class, 'entregar'])->name('requisicoes.entregar');
     });

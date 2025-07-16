@@ -14,9 +14,6 @@ use Illuminate\Pagination\LengthAwarePaginator;
 
 class RequisicaoController extends Controller
 {
-    /**
-     * Mostra a página de requisições com filtros e abas para o Admin.
-     */
     public function index(Request $request)
     {
         $user = auth()->user();
@@ -51,39 +48,54 @@ class RequisicaoController extends Controller
         ]);
     }
 
-
-
     /**
-     * Mostra o formulário para criar uma nova requisição com pesquisa e paginação.
+     * Mostra o formulário para criar uma nova requisição, com pesquisa e paginação.
      */
     public function create(Request $request)
     {
         $search = $request->get('search', '');
+
         $query = Livro::whereDoesntHave('requisicaoAtiva')->with(['editora', 'autores']);
         $todosLivros = $query->get();
+
         $todosLivros->each(function ($livro) {
             $livro->nome_visivel = $livro->nome;
-            if ($livro->editora) $livro->editora->nome_visivel = $livro->editora->nome;
+            if ($livro->editora) {
+                $livro->editora->nome_visivel = $livro->editora->nome;
+            }
             $livro->autores->each(function ($autor) {
                 $autor->nome_visivel = $autor->nome;
             });
         });
-        $livrosFiltrados = $search ? $todosLivros->filter(function ($livro) use ($search) {
-            $searchLower = $this->removeAcentos($search);
-            if (str_contains($this->removeAcentos($livro->nome_visivel), $searchLower)) return true;
-            return false;
-        }) : $todosLivros;
+
+        $livrosFiltrados = $todosLivros;
+        if ($search) {
+            $livrosFiltrados = $todosLivros->filter(function ($livro) use ($search) {
+                $termo = $this->removeAcentos($search);
+                if (str_contains($this->removeAcentos($livro->nome_visivel), $termo)) return true;
+                if ($livro->editora && str_contains($this->removeAcentos($livro->editora->nome_visivel), $termo)) return true;
+                foreach ($livro->autores as $autor) {
+                    if (str_contains($this->removeAcentos($autor->nome_visivel), $termo)) return true;
+                }
+                return false;
+            });
+        }
+
         $livrosOrdenados = $livrosFiltrados->sortBy('nome_visivel');
         $page = Paginator::resolveCurrentPage('page');
         $perPage = 12;
-        $livrosDisponiveis = new LengthAwarePaginator($livrosOrdenados->forPage($page, $perPage)->values(), $livrosOrdenados->count(), $perPage, $page, ['path' => Paginator::resolveCurrentPath()]);
+        $livrosDisponiveis = new LengthAwarePaginator(
+            $livrosOrdenados->forPage($page, $perPage)->values(),
+            $livrosOrdenados->count(),
+            $perPage,
+            $page,
+            ['path' => Paginator::resolveCurrentPath()]
+        );
         $livrosDisponiveis->withQueryString();
+
         return view('requisicoes.create', compact('livrosDisponiveis', 'search'));
     }
 
-    /**
-     * Guarda as novas requisições e dispara o email de confirmação.
-     */
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -100,7 +112,12 @@ class RequisicaoController extends Controller
         foreach ($validated['livros_ids'] as $livro_id) {
             $livro = Livro::find($livro_id);
             if ($livro && $livro->isDisponivel()) {
-                $novaRequisicao = Requisicao::create(['user_id' => $user->id, 'livro_id' => $livro_id, 'data_inicio' => now(), 'data_fim_prevista' => now()->addDays(5)]);
+                $novaRequisicao = Requisicao::create([
+                    'user_id' => $user->id,
+                    'livro_id' => $livro_id,
+                    'data_inicio' => now(),
+                    'data_fim_prevista' => now()->addDays(5)
+                ]);
                 Mail::to($user->email)->send(new RequisicaoCriada($novaRequisicao));
                 $livrosCriados++;
             }
@@ -109,30 +126,31 @@ class RequisicaoController extends Controller
         return redirect()->route('requisicoes.index')->with('success', "$livrosCriados requisição(ões) criada(s) com sucesso!");
     }
 
-    /**
-     * Aprova uma requisição. (Ação de Admin)
-     */
     public function aprovar(Requisicao $requisicao)
     {
         $requisicao->update(['status' => 'aprovado']);
         return back()->with('success', 'Requisição aprovada!');
     }
 
-    /**
-     * Regista a devolução de um livro. (Ação de Admin)
-     */
     public function entregar(Request $request, Requisicao $requisicao)
     {
-        $validated = $request->validate(['data_fim_real' => 'required|date', 'observacoes' => 'nullable|string|max:500']);
+        $validated = $request->validate([
+            'data_fim_real' => 'required|date',
+            'observacoes' => 'nullable|string|max:500'
+        ]);
         $dataFimReal = Carbon::parse($validated['data_fim_real']);
-        $diasAtraso = $dataFimReal->isAfter($requisicao->data_fim_prevista) ? $dataFimReal->diffInDays($requisicao->data_fim_prevista) : 0;
-        $requisicao->update(['status' => 'devolvido', 'data_fim_real' => $dataFimReal, 'observacoes' => $validated['observacoes'], 'dias_atraso' => $diasAtraso]);
+        $diasAtraso = $dataFimReal->isAfter($requisicao->data_fim_prevista)
+            ? $dataFimReal->diffInDays($requisicao->data_fim_prevista)
+            : 0;
+        $requisicao->update([
+            'status' => 'devolvido',
+            'data_fim_real' => $dataFimReal,
+            'observacoes' => $validated['observacoes'],
+            'dias_atraso' => $diasAtraso
+        ]);
         return back()->with('success', 'Devolução registrada com sucesso!');
     }
 
-    /**
-     * Cancela/Deleta uma requisição. (Ação de Cidadão ou Admin)
-     */
     public function cancelar(Requisicao $requisicao)
     {
         $user = auth()->user();
@@ -143,9 +161,6 @@ class RequisicaoController extends Controller
         return back()->with('error', 'Você não tem permissão para esta ação.');
     }
 
-    /**
-     * Função auxiliar para remover acentos para a pesquisa.
-     */
     private function removeAcentos($string)
     {
         return strtolower(iconv('UTF-8', 'ASCII//TRANSLIT', $string ?? ''));
