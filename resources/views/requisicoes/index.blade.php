@@ -17,7 +17,7 @@
                     <a role="tab"
                         class="tab {{ ($active_tab ?? 'visao_geral') === 'visao_geral' ? 'tab-active' : '' }}"
                         href="{{ route('requisicoes.index') }}">Visão Geral</a>
-                    <a role="tab" class="tab {{ $active_tab === 'lista' ? 'tab-active' : '' }}"
+                    <a role="tab" class="tab {{ ($active_tab ?? '') === 'lista' ? 'tab-active' : '' }}"
                         href="{{ route('requisicoes.index', ['tab' => 'lista']) }}">Lista Completa</a>
                 </div>
                 @if (($active_tab ?? 'visao_geral') === 'visao_geral')
