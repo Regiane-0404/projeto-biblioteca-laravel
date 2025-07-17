@@ -68,6 +68,9 @@ class UserController extends Controller
 
     public function edit(User $user)
     {
+        // Carregamos as duas relações de requisições que a view precisa.
+        $user->load('requisicoes', 'requisicoesAtivas');
+
         return view('users.edit', compact('user'));
     }
 

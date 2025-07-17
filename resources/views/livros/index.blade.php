@@ -81,22 +81,34 @@
                                 @forelse ($livros as $livro)
                                     <tr class="hover">
                                         <td>
-                                            <div class="flex items-center space-x-3">
+                                            <div class="flex items-center gap-3">
+                                                @php
+                                                    $imageUrl = null;
+                                                    if ($livro->imagem_capa) {
+                                                        if (str_starts_with($livro->imagem_capa, 'http')) {
+                                                            $imageUrl = $livro->imagem_capa;
+                                                        } elseif (
+                                                            Storage::disk('public')->exists($livro->imagem_capa)
+                                                        ) {
+                                                            $imageUrl = asset('storage/' . $livro->imagem_capa);
+                                                        }
+                                                    }
+                                                @endphp
+
                                                 <div class="avatar">
-                                                    <div class="mask mask-squircle w-12 h-12">
-                                                        @if ($livro->imagem_capa && Storage::disk('public')->exists($livro->imagem_capa))
-                                                            <img src="{{ asset('storage/' . $livro->imagem_capa) }}"
-                                                                alt="Capa de {{ $livro->nome }}" />
+                                                    <div class="mask mask-squircle w-12 h-12 bg-base-200">
+                                                        @if ($imageUrl)
+                                                            <img src="{{ $imageUrl }}"
+                                                                alt="Capa de {{ $livro->nome }}">
                                                         @else
-                                                            <div
-                                                                class="w-12 h-12 bg-base-200 flex items-center justify-center">
-                                                                <span class="text-xl opacity-40">📚</span></div>
+                                                            <span
+                                                                class="text-xl opacity-40 flex items-center justify-center w-full h-full">📚</span>
                                                         @endif
                                                     </div>
                                                 </div>
                                                 <div>
                                                     <div class="font-bold">{{ $livro->nome }}</div>
-                                                    <div class="text-sm opacity-50 font-mono">{{ $livro->isbn }}</div>
+                                                    <div class="text-sm opacity-60 font-mono">{{ $livro->isbn }}</div>
                                                 </div>
                                             </div>
                                         </td>
@@ -107,7 +119,8 @@
                                                 class="badge badge-ghost badge-sm">{{ $livro->autores->pluck('nome')->join(', ') ?: 'N/A' }}</span>
                                         </td>
                                         <td class="text-right font-semibold">
-                                            €{{ number_format($livro->preco, 2, ',', '.') }}</td>
+                                            €{{ number_format($livro->preco, 2, ',', '.') }}
+                                        </td>
                                         <td class="text-center">
                                             @if ($livro->ativo)
                                                 <span class="badge badge-success">Ativo</span>

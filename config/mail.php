@@ -1,4 +1,4 @@
-config/mail.php:<?php
+<?php
 
 return [
 

@@ -24,14 +24,18 @@ class DashboardController extends Controller
 
     private function adminDashboard()
     {
-        // O SEU DASHBOARD DE ADMIN CONTINUA A USAR A VIEW 'dashboard'
-        // PODEMOS MELHORÁ-LO DEPOIS, POR AGORA ESTÁ OK.
+        // 1. Primeiro, criamos o array com as estatísticas.
         $stats = [
             'livros_ativos' => Livro::where('ativo', true)->count(),
             'autores' => Autor::count(),
             'editoras' => Editora::count(),
         ];
-        return view('dashboard', compact('stats'));
+
+        // 2. DEPOIS, e em separado, buscamos a lista de livros recentes.
+        $livros_recentes = Livro::latest()->take(5)->get();
+
+        // 3. Finalmente, enviamos as DUAS variáveis (stats e livros_recentes) para a view.
+        return view('dashboard', compact('stats', 'livros_recentes'));
     }
 
     private function cidadaoDashboard()

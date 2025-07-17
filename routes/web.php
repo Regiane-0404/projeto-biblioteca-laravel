@@ -76,6 +76,11 @@ Route::middleware([
         Route::patch('/livros/{livro}/inativar', [LivroController::class, 'inativar'])->name('livros.inativar');
         Route::patch('/livros/{livro}/ativar', [LivroController::class, 'ativar'])->name('livros.ativar');
         Route::get('/livros/exportar/csv', [LivroController::class, 'exportar'])->name('livros.exportar');
+        Route::get('/livros/importar', [LivroController::class, 'mostrarFormularioImportacao'])->name('livros.importar.form');
+        Route::get('/livros/importar/pesquisar', [LivroController::class, 'pesquisarNaGoogleAPI'])->name('livros.importar.pesquisar');
+        Route::post('/livros/importar', [LivroController::class, 'importarLivro'])->name('livros.importar.store');
+        Route::post('/livros/importar', [LivroController::class, 'guardarLivroImportado'])->name('livros.importar.store');
+
 
         // AUTORES
         Route::get('/autores/create', [AutorController::class, 'create'])->name('autores.create');
@@ -99,5 +104,4 @@ Route::middleware([
         Route::patch('/requisicoes/{requisicao}/aprovar', [RequisicaoController::class, 'aprovar'])->name('requisicoes.aprovar');
         Route::patch('/requisicoes/{requisicao}/entregar', [RequisicaoController::class, 'entregar'])->name('requisicoes.entregar');
     });
- 
 });

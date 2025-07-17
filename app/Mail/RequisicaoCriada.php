@@ -4,12 +4,14 @@ namespace App\Mail;
 
 use App\Models\Requisicao;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue; // 1. ADICIONE ESTE IMPORT
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
-class RequisicaoCriada extends Mailable
+// 2. ADICIONE "implements ShouldQueue" AQUI
+class RequisicaoCriada extends Mailable implements ShouldQueue
 {
     use Queueable, SerializesModels;
 
@@ -43,7 +45,6 @@ class RequisicaoCriada extends Mailable
      */
     public function content(): Content
     {
-        // Vamos criar esta view a seguir.
         return new Content(
             markdown: 'emails.requisicoes.criada', 
         );

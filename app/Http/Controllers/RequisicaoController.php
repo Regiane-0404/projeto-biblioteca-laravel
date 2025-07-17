@@ -118,12 +118,21 @@ class RequisicaoController extends Controller
                     'data_inicio' => now(),
                     'data_fim_prevista' => now()->addDays(5)
                 ]);
-                Mail::to($user->email)->send(new RequisicaoCriada($novaRequisicao));
+
+                // 1. Envia email para o Cidadão (já funciona)
+                //Mail::to($user->email)->send(new RequisicaoCriada($novaRequisicao));
+
+                Mail::to($user->email)->queue(new RequisicaoCriada($novaRequisicao));
+
+                // 2. ADICIONAR ESTA LINHA PARA NOTIFICAR O ADMIN
+                $emailAdmin = 'regianecinel@gmail.com';
+                Mail::to($emailAdmin)->queue(new \App\Mail\NovaRequisicaoParaAdmin($novaRequisicao));
+
                 $livrosCriados++;
             }
         }
 
-        return redirect()->route('requisicoes.index')->with('success', "$livrosCriados requisição(ões) criada(s) com sucesso!");
+        return redirect()->route('requisicoes.index')->with('success', "$livrosCriados requisição(ões) criada(s) com sucesso! Foi enviado um email de confirmação.");
     }
 
     public function aprovar(Requisicao $requisicao)
@@ -131,8 +140,6 @@ class RequisicaoController extends Controller
         $requisicao->update(['status' => 'aprovado']);
         return back()->with('success', 'Requisição aprovada!');
     }
-
-
 
     public function entregar(Request $request, Requisicao $requisicao)
     {
@@ -171,9 +178,6 @@ class RequisicaoController extends Controller
 
         return back()->with('success', 'Devolução registrada com sucesso!');
     }
-
-
-
 
     public function cancelar(Requisicao $requisicao)
     {

@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Http;
 
 class LivroController extends Controller
 {
@@ -139,6 +140,16 @@ class LivroController extends Controller
         return view('livros.create', compact('editoras', 'autores'));
     }
 
+    /**
+     * Mostra o formulário para pesquisar e importar livros da Google API.
+     */
+    public function mostrarFormularioImportacao()
+    {
+        // Por enquanto, esta função apenas retorna a view.
+        // Mais tarde, ela também vai receber os resultados da pesquisa da API.
+        return view('livros.importar');
+    }
+
     public function store(Request $request)
     {
         // 1. Validação dos dados
@@ -192,20 +203,20 @@ class LivroController extends Controller
             ->with('success', 'Livro criado com sucesso!');
     }
 
-  public function show(Livro $livro)
-{
-    // A linha abaixo carrega as relações de forma um pouco diferente,
-    // o que pode ser mais robusto em certos cenários.
-    // Primeiro carrega o básico, depois as requisições.
-    $livro->load('editora', 'autores');
-    
-    $livro->load(['requisicoes' => function ($query) {
-        $query->with('user')->orderBy('created_at', 'desc');
-    }]);
+    public function show(Livro $livro)
+    {
+        // A linha abaixo carrega as relações de forma um pouco diferente,
+        // o que pode ser mais robusto em certos cenários.
+        // Primeiro carrega o básico, depois as requisições.
+        $livro->load('editora', 'autores');
 
-    // Agora, passamos para a view.
-    return view('livros.show', compact('livro'));
-}
+        $livro->load(['requisicoes' => function ($query) {
+            $query->with('user')->orderBy('created_at', 'desc');
+        }]);
+
+        // Agora, passamos para a view.
+        return view('livros.show', compact('livro'));
+    }
 
     public function edit(Livro $livro)
     {
@@ -383,5 +394,124 @@ class LivroController extends Controller
         };
 
         return response()->stream($callback, 200, $headers);
+    }
+
+
+    /* Pesquisa livros na Google Books API e mostra os resultados.
+     */
+    public function pesquisarNaGoogleAPI(Request $request)
+    {
+        // 1. Validamos para garantir que um termo de pesquisa foi enviado.
+        $request->validate(['termo_pesquisa' => 'required|string|min:3']);
+
+        $termo = $request->termo_pesquisa;
+        $apiKey = env('GOOGLE_BOOKS_API_KEY'); // Precisaremos de criar esta chave
+
+        // Se a chave da API não estiver configurada, mostramos um erro amigável.
+        if (!$apiKey) {
+            return back()->with('error', 'A chave da Google Books API não está configurada no sistema.');
+        }
+
+        // 2. Fazemos a chamada à API usando o HTTP Client do Laravel.
+        $response = Http::get('https://www.googleapis.com/books/v1/volumes', [
+            'q' => $termo,
+            'key' => $apiKey,
+            'maxResults' => 20, // Limitamos a 20 resultados para não sobrecarregar
+            'printType' => 'books',
+        ]);
+
+        // 3. Verificamos se a resposta foi bem-sucedida.
+        if ($response->failed()) {
+            // Vamos fazer um "dump and die" da resposta para ver o erro exato
+            //dd($response->body(), $response->status());
+
+            return back()->with('error', 'Falha ao comunicar com a Google Books API.');
+        }
+
+        // 4. Processamos os resultados. A API pode não retornar nada.
+        $items = $response->json()['items'] ?? [];
+
+        // 5. Transformamos os dados brutos da API num formato mais limpo para a nossa view.
+        $resultados = collect($items)->map(function ($item) {
+            $info = $item['volumeInfo'];
+            return (object) [
+                'google_id' => $item['id'],
+                'titulo' => $info['title'] ?? 'Título não disponível',
+                'autores' => isset($info['authors']) ? implode(', ', $info['authors']) : 'Autor não informado',
+                'editora' => $info['publisher'] ?? 'Editora não informada',
+                'isbn' => $info['industryIdentifiers'][0]['identifier'] ?? null, // Pega o primeiro ISBN
+                'capa_url' => $info['imageLinks']['thumbnail'] ?? null,
+            ];
+        });
+
+        // 6. Retornamos para a mesma view de importação, mas agora passando os resultados.
+        return view('livros.importar', [
+            'resultados' => $resultados,
+            'termo_pesquisa' => $termo, // Para manter o termo na caixa de pesquisa
+        ]);
+    }
+
+
+    /**
+     * Guarda um livro selecionado da API na base de dados local.
+     */
+    public function guardarLivroImportado(Request $request)
+    {
+        // 1. Validação simples para garantir que temos os dados mínimos
+        $dados = $request->validate([
+            'titulo' => 'required|string',
+            'isbn' => 'required|string',
+            'autores' => 'nullable|string',
+            'editora' => 'nullable|string',
+            'capa_url' => 'nullable|url',
+        ]);
+
+        // 2. Normaliza o ISBN para a verificação (remove hífens e espaços)
+        $isbnNormalizado = preg_replace('/[\s-]+/', '', $dados['isbn']);
+
+        // 3. Verifica se um livro com este ISBN já existe
+        if (Livro::where('isbn', $isbnNormalizado)->exists()) {
+            return back()->with('error', "O livro '{$dados['titulo']}' (ISBN: {$dados['isbn']}) já existe na sua biblioteca.");
+        }
+
+        // 4. Lógica de "Procurar ou Criar" para a Editora
+        // Se a editora não for nula, procura por ela. Se não encontrar, cria uma nova.
+        $editoraModel = null;
+        if (!empty($dados['editora'])) {
+            $editoraModel = Editora::firstOrCreate(['nome' => $dados['editora']]);
+        }
+
+        // 5. Lógica de "Procurar ou Criar" para os Autores
+        $autoresIds = [];
+        if (!empty($dados['autores'])) {
+            // A API pode devolver vários autores separados por vírgula
+            $listaAutores = explode(',', $dados['autores']);
+            foreach ($listaAutores as $nomeAutor) {
+                $nomeAutor = trim($nomeAutor); // Limpa espaços extra
+                if (!empty($nomeAutor)) {
+                    $autorModel = Autor::firstOrCreate(['nome' => $nomeAutor]);
+                    $autoresIds[] = $autorModel->id;
+                }
+            }
+        }
+
+        // 6. Finalmente, cria o Livro na nossa base de dados
+        $novoLivro = Livro::create([
+            'nome' => $dados['titulo'],
+            'isbn' => $isbnNormalizado,
+            'editora_id' => $editoraModel ? $editoraModel->id : null,
+            'bibliografia' => 'Importado via Google Books API.', // Valor padrão
+            'preco' => 0.00, // Valor padrão, pode ser editado depois
+            'imagem_capa' => $dados['capa_url'], // Guardamos o URL da capa
+            'ativo' => true,
+        ]);
+
+        // 7. Associa os autores ao novo livro
+        if (!empty($autoresIds)) {
+            $novoLivro->autores()->sync($autoresIds);
+        }
+
+        // 8. Retorna com uma mensagem de sucesso
+        return redirect()->route('livros.importar.form')->with('success', "O livro '{$novoLivro->nome}' foi importado com sucesso!");
     }
 }

@@ -1,132 +1,124 @@
 <nav x-data="{ open: false }" class="navbar bg-base-100 shadow-lg">
-    <!-- Primary Navigation Menu -->
+    <!-- Secção Esquerda: Hamburger (Mobile) e Nome da App -->
     <div class="navbar-start">
-        <!-- Logo -->
-        <div class="flex-shrink-0 flex items-center">
-            <a href="{{ route('dashboard') }}" class="btn btn-ghost text-xl">
-                <x-application-mark class="block h-9 w-auto" />
-                {{ config('app.name', 'Laravel') }}
-            </a>
-        </div>
-
-        <!-- Navigation Links -->
-        <div class="hidden lg:flex">
-            <ul class="menu menu-horizontal px-1">
-                <li>
-                    <x-nav-link href="{{ route('dashboard') }}" :active="request()->routeIs('dashboard')">
-                        {{ __('Dashboard') }}
-                    </x-nav-link>
+        <div class="dropdown lg:hidden">
+            <div tabindex="0" role="button" class="btn btn-ghost">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+                    stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7" />
+                </svg>
+            </div>
+            <!-- Menu Mobile -->
+            <ul tabindex="0" class="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-base-100 rounded-box w-52">
+                <li><a href="{{ route('dashboard') }}">🏠 Dashboard</a></li>
+                <li><a>📖 Livros</a>
+                    <ul class="p-2">
+                        <li><a href="{{ route('livros.index') }}">Ver Lista</a></li>
+                        @if (auth()->user()->role === 'admin')
+                            <li><a href="{{ route('livros.create') }}">Inserir Manual</a></li>
+                            <li><a href="{{ route('livros.importar.form') }}">Importar</a></li>
+                        @endif
+                    </ul>
                 </li>
-                <li>
-                    <details>
-                        <summary>📚 Biblioteca</summary>
-                        <ul class="p-2 bg-base-100 rounded-t-none">
-                            <li><a href="{{ route('livros.index') }}">📖 Livros</a></li>
-                            <li><a href="{{ route('autores.index') }}">✍️ Autores</a></li>
-                            <li><a href="{{ route('editoras.index') }}">🏢 Editoras</a></li>
+                @if (auth()->user()->role === 'admin')
+                    <li><a href="{{ route('autores.index') }}">✍️ Autores</a></li>
+                    <li><a href="{{ route('editoras.index') }}">🏢 Editoras</a></li>
+                @endif
+                <li><a>📋 Requisições</a>
+                    <ul class="p-2">
+                        <li><a href="{{ route('requisicoes.index') }}">📋
+                                {{ auth()->user()->role === 'admin' ? 'Ver Todas' : 'Minhas' }}</a></li>
+                        <li><a href="{{ route('requisicoes.create') }}">➕ Nova</a></li>
+                    </ul>
+                </li>
+                @if (auth()->user()->role === 'admin')
+                    <li><a>👥 Usuários</a>
+                        <ul class="p-2">
+                            <li><a href="{{ route('users.index') }}">👥 Listar</a></li>
+                            <li><a href="{{ route('users.create') }}">➕ Novo</a></li>
                         </ul>
-                    </details>
-                </li>
-                {{--<li>
+                    </li>
+                @endif
+            </ul>
+        </div>
+        <!--<a href="{{ route('dashboard') }}" class="btn btn-ghost text-xl normal-case">
+            {{ config('app.name', 'Biblioteca') }}
+        </a>-->
+    </div>
+
+    <!-- Secção Central: Menu Principal para Desktop -->
+    <div class="navbar-center hidden lg:flex">
+        <ul class="menu menu-horizontal px-1">
+            <li><a href="{{ route('dashboard') }}"
+                    class="text-base {{ request()->routeIs('dashboard') ? 'active' : '' }}">🏠 Dashboard</a></li>
+
+            <li>
+                <details>
+                    <summary class="text-base">📖 Livros</summary>
+                    <ul class="p-2 bg-base-100 rounded-t-none z-[1]">
+                        <li><a href="{{ route('livros.index') }}">📖 Ver Lista</a></li>
+                        @if (auth()->user()->role === 'admin')
+                            <li><a href="{{ route('livros.create') }}">➕ Inserir (Manual)</a></li>
+                            <li><a href="{{ route('livros.importar.form') }}">🔎 Importar (Google)</a></li>
+                        @endif
+                    </ul>
+                </details>
+            </li>
+
+            @if (auth()->user()->role === 'admin')
+                <li><a href="{{ route('autores.index') }}" class="text-base">✍️ Autores</a></li>
+                <li><a href="{{ route('editoras.index') }}" class="text-base">🏢 Editoras</a></li>
+            @endif
+
+            <li>
+                <details>
+                    <summary class="text-base">📋 Requisições</summary>
+                    <ul class="p-2 bg-base-100 rounded-t-none z-[1]">
+                        <li><a href="{{ route('requisicoes.index') }}">📋
+                                {{ auth()->user()->role === 'admin' ? 'Ver Todas' : 'Minhas Requisições' }}</a></li>
+                        <li><a href="{{ route('requisicoes.create') }}">➕ Nova Requisição</a></li>
+                    </ul>
+                </details>
+            </li>
+
+            @if (auth()->user()->role === 'admin')
+                <li>
                     <details>
-                        <summary>👥 Usuários</summary>
-                        <ul class="p-2 bg-base-100 rounded-t-none">
+                        <summary class="text-base">👥 Usuários</summary>
+                        <ul class="p-2 bg-base-100 rounded-t-none z-[1]">
                             <li><a href="{{ route('users.index') }}">👥 Listar Usuários</a></li>
                             <li><a href="{{ route('users.create') }}">➕ Novo Usuário</a></li>
                         </ul>
                     </details>
-                </li>--}}
-                {{-- Só mostra o menu "Usuários" se o utilizador for admin --}}
-                    @if (Auth::user()->role === 'admin')
-                        <li>
-                            <details>
-                                <summary>👥 Usuários</summary>
-                                <ul class="p-2 bg-base-100 rounded-t-none">
-                                    <li><a href="{{ route('users.index') }}">👥 Listar Usuários</a></li>
-                                    <li><a href="{{ route('users.create') }}">➕ Novo Usuário</a></li>
-                                </ul>
-                            </details>
-                        </li>
-                    @endif
-                <li>
-                    <details>
-                        <summary>📋 Requisições</summary>
-                        <ul class="p-2 bg-base-100 rounded-t-none">
-                            <li><a href="{{ route('requisicoes.index') }}">📋 Minhas Requisições</a></li>
-                            <li><a href="{{ route('requisicoes.create') }}">➕ Nova Requisição</a></li>
-                        </ul>
-                    </details>
                 </li>
-                
-            </ul>
-        </div>
+            @endif
+        </ul>
     </div>
 
+    <!-- Secção Direita: Dropdown do Perfil -->
     <div class="navbar-end">
-        <!-- Settings Dropdown -->
         @auth
             <div class="dropdown dropdown-end">
                 <div tabindex="0" role="button" class="btn btn-ghost btn-circle avatar">
                     <div class="w-10 rounded-full">
-                        <img alt="Avatar" src="{{ Auth::user()->profile_photo_url }}" />
+                        <img alt="{{ Auth::user()->name }}" src="{{ Auth::user()->profile_photo_url }}" />
                     </div>
                 </div>
                 <ul tabindex="0" class="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-base-100 rounded-box w-52">
-                    <li class="menu-title">
-                        <span>{{ Auth::user()->name }}</span>
-                    </li>
+                    <li class="menu-title"><span>{{ Auth::user()->name }}</span></li>
                     <li><a href="{{ route('profile.show') }}">⚙️ Perfil</a></li>
-                    
-                    @if (Laravel\Jetstream\Jetstream::hasApiFeatures())
-                        <li><a href="{{ route('api-tokens.index') }}">🔑 API Tokens</a></li>
-                    @endif
-
                     <div class="divider my-1"></div>
-                    
-                    <!-- Authentication -->
                     <li>
                         <form method="POST" action="{{ route('logout') }}" x-data>
                             @csrf
-                            <a href="{{ route('logout') }}"
-                                @click.prevent="$root.submit();">
-                                🚪 Sair
-                            </a>
+                            <a href="{{ route('logout') }}" @click.prevent="$root.submit();">🚪 Sair</a>
                         </form>
                     </li>
                 </ul>
             </div>
         @else
-            <div class="space-x-2">
-                <a href="{{ route('login') }}" class="btn btn-ghost">Entrar</a>
-                @if (Route::has('register'))
-                    <a href="{{ route('register') }}" class="btn btn-primary">Registrar</a>
-                @endif
-            </div>
+            <a href="{{ route('login') }}" class="btn btn-sm btn-ghost">Login</a>
+            <a href="{{ route('register') }}" class="btn btn-sm">Registar</a>
         @endauth
-    </div>
-
-    <!-- Hamburger Menu for Mobile -->
-    <div class="navbar-start lg:hidden">
-        <div class="dropdown">
-            <div tabindex="0" role="button" class="btn btn-ghost btn-circle">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
-                </svg>
-            </div>
-            <ul tabindex="0" class="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-base-100 rounded-box w-52">
-                <li><a href="{{ route('dashboard') }}">🏠 Dashboard</a></li>
-                <div class="divider my-1"></div>
-                <li><a href="{{ route('livros.index') }}">📖 Livros</a></li>
-                <li><a href="{{ route('autores.index') }}">✍️ Autores</a></li>
-                <li><a href="{{ route('editoras.index') }}">🏢 Editoras</a></li>
-                <li><a href="{{ route('requisicoes.index') }}">📋 Requisições</a></li>
-                {{--<li><a href="{{ route('users.index') }}">👥 Usuários</a></li>--}}
-                {{-- Também esconde o link no menu mobile --}}
-                @if (Auth::user()->role === 'admin')
-                    <li><a href="{{ route('users.index') }}">👥 Usuários</a></li>
-                @endif
-
-            </ul>
-        </div>
     </div>
 </nav>
