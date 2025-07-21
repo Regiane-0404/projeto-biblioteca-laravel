@@ -15,11 +15,22 @@ class Livro extends Model
     use HasFactory, Encryptable;
 
     protected $fillable = [
-        'isbn', 'nome', 'editora_id', 'bibliografia', 'imagem_capa', 'preco', 'ativo'
+        'isbn',
+        'nome',
+        'editora_id',
+        'bibliografia',
+        'imagem_capa',
+        'preco',
+        'ativo',
+        'quantidade', // <-- ADICIONADO
     ];
 
     protected $encryptable = [
-        'isbn', 'nome', 'bibliografia', 'imagem_capa', 'preco'
+        'isbn',
+        'nome',
+        'bibliografia',
+        'imagem_capa',
+        'preco'
     ];
 
     protected $casts = [
@@ -48,8 +59,9 @@ class Livro extends Model
     }
 
     // MÉTODOS HELPER
-    public function isDisponivel(): bool
+    public function isDisponivel()
     {
-        return !$this->requisicaoAtiva()->exists();
+        // A nova regra: um livro está disponível se a sua quantidade em estoque for maior que zero.
+        return $this->quantidade > 0;
     }
 }

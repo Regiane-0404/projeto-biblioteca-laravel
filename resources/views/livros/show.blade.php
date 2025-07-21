@@ -60,7 +60,10 @@
                     <div class="card bg-base-100 shadow-xl">
                         <div class="card-body">
                             <h1 class="text-3xl font-bold text-base-content mb-3">{{ $livro->nome }}</h1>
+
+                            <!-- Linha com ISBN e Preço -->
                             <p class="text-base-content/70 text-lg"><strong>ISBN:</strong> {{ $livro->isbn }}</p>
+
                             <div class="space-y-6 mt-6">
                                 <div>
                                     <h3 class="font-semibold text-base-content text-lg mb-2">🏢 Editora</h3>

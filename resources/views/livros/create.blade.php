@@ -12,12 +12,14 @@
 
     <div class="py-6">
         <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-            
+
             <!-- Erros de Validação -->
             @if ($errors->any())
                 <div class="alert alert-error mb-6">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none"
+                        viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                     <div>
                         <h3 class="font-bold">Erro!</h3>
@@ -37,24 +39,18 @@
                         @csrf
 
                         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                            
+
                             <!-- Coluna Esquerda -->
                             <div class="space-y-4">
-                                
+
                                 <!-- Nome do Livro -->
                                 <div class="form-control">
                                     <label class="label" for="nome">
                                         <span class="label-text font-semibold">📖 Nome do Livro *</span>
                                     </label>
-                                    <input 
-                                        type="text" 
-                                        id="nome"
-                                        name="nome" 
-                                        class="input input-bordered w-full @error('nome') input-error @enderror" 
-                                        value="{{ old('nome') }}"
-                                        placeholder="Ex: Dom Casmurro"
-                                        required
-                                    />
+                                    <input type="text" id="nome" name="nome"
+                                        class="input input-bordered w-full @error('nome') input-error @enderror"
+                                        value="{{ old('nome') }}" placeholder="Ex: Dom Casmurro" required />
                                     @error('nome')
                                         <label class="label">
                                             <span class="label-text-alt text-error">{{ $message }}</span>
@@ -67,15 +63,9 @@
                                     <label class="label" for="isbn">
                                         <span class="label-text font-semibold">🏷️ ISBN *</span>
                                     </label>
-                                    <input 
-                                        type="text" 
-                                        id="isbn"
-                                        name="isbn" 
-                                        class="input input-bordered w-full @error('isbn') input-error @enderror" 
-                                        value="{{ old('isbn') }}"
-                                        placeholder="Ex: 978-85-250-0000-0"
-                                        required
-                                    />
+                                    <input type="text" id="isbn" name="isbn"
+                                        class="input input-bordered w-full @error('isbn') input-error @enderror"
+                                        value="{{ old('isbn') }}" placeholder="Ex: 978-85-250-0000-0" required />
                                     @error('isbn')
                                         <label class="label">
                                             <span class="label-text-alt text-error">{{ $message }}</span>
@@ -88,18 +78,13 @@
                                     <label class="label" for="editora_id">
                                         <span class="label-text font-semibold">🏢 Editora *</span>
                                     </label>
-                                    <select 
-                                        id="editora_id"
-                                        name="editora_id" 
+                                    <select id="editora_id" name="editora_id"
                                         class="select select-bordered w-full @error('editora_id') select-error @enderror"
-                                        required
-                                    >
+                                        required>
                                         <option value="">Selecione uma editora</option>
-                                        @foreach($editoras as $editora)
-                                            <option 
-                                                value="{{ $editora->id }}" 
-                                                {{ old('editora_id') == $editora->id ? 'selected' : '' }}
-                                            >
+                                        @foreach ($editoras as $editora)
+                                            <option value="{{ $editora->id }}"
+                                                {{ old('editora_id') == $editora->id ? 'selected' : '' }}>
                                                 {{ $editora->nome }}
                                             </option>
                                         @endforeach
@@ -116,18 +101,29 @@
                                     <label class="label" for="preco">
                                         <span class="label-text font-semibold">💰 Preço (€) *</span>
                                     </label>
-                                    <input 
-                                        type="number" 
-                                        id="preco"
-                                        name="preco" 
-                                        class="input input-bordered w-full @error('preco') input-error @enderror" 
-                                        value="{{ old('preco') }}"
-                                        placeholder="Ex: 15.90"
-                                        step="0.01"
-                                        min="0"
-                                        required
-                                    />
+                                    <input type="number" id="preco" name="preco"
+                                        class="input input-bordered w-full @error('preco') input-error @enderror"
+                                        value="{{ old('preco') }}" placeholder="Ex: 15.90" step="0.01"
+                                        min="0" required />
                                     @error('preco')
+                                        <label class="label">
+                                            <span class="label-text-alt text-error">{{ $message }}</span>
+                                        </label>
+                                    @enderror
+                                </div>
+
+                                <!-- ============================================= -->
+                                <!--   NOVO CAMPO PARA QUANTIDADE EM ESTOQUE       -->
+                                <!-- ============================================= -->
+                                <div class="form-control">
+                                    <label class="label">
+                                        <span class="label-text">Quantidade em Estoque</span>
+                                    </label>
+                                    <input type="number" name="quantidade" value="{{ old('quantidade', 1) }}"
+                                        placeholder="Ex: 5"
+                                        class="input input-bordered @error('quantidade') input-error @enderror"
+                                        min="0" required>
+                                    @error('quantidade')
                                         <label class="label">
                                             <span class="label-text-alt text-error">{{ $message }}</span>
                                         </label>
@@ -138,22 +134,18 @@
 
                             <!-- Coluna Direita -->
                             <div class="space-y-4">
-                                
+
                                 <!-- Autores -->
                                 <div class="form-control">
                                     <label class="label">
                                         <span class="label-text font-semibold">✍️ Autores *</span>
                                     </label>
                                     <div class="grid grid-cols-1 gap-2 max-h-48 overflow-y-auto border rounded-lg p-3">
-                                        @foreach($autores as $autor)
+                                        @foreach ($autores as $autor)
                                             <label class="cursor-pointer label justify-start gap-3">
-                                                <input 
-                                                    type="checkbox" 
-                                                    name="autores[]" 
-                                                    value="{{ $autor->id }}"
+                                                <input type="checkbox" name="autores[]" value="{{ $autor->id }}"
                                                     class="checkbox checkbox-primary"
-                                                    {{ in_array($autor->id, old('autores', [])) ? 'checked' : '' }}
-                                                />
+                                                    {{ in_array($autor->id, old('autores', [])) ? 'checked' : '' }} />
                                                 <span class="label-text">{{ $autor->nome }}</span>
                                             </label>
                                         @endforeach
@@ -170,13 +162,9 @@
                                     <label class="label" for="imagem_capa">
                                         <span class="label-text font-semibold">🖼️ Capa do Livro</span>
                                     </label>
-                                    <input 
-                                        type="file" 
-                                        id="imagem_capa"
-                                        name="imagem_capa" 
+                                    <input type="file" id="imagem_capa" name="imagem_capa"
                                         class="file-input file-input-bordered w-full @error('imagem_capa') file-input-error @enderror"
-                                        accept="image/*"
-                                    />
+                                        accept="image/*" />
                                     <label class="label">
                                         <span class="label-text-alt">Formatos: JPG, PNG, GIF (máx. 2MB)</span>
                                     </label>
@@ -195,12 +183,9 @@
                             <label class="label" for="bibliografia">
                                 <span class="label-text font-semibold">📄 Bibliografia/Descrição</span>
                             </label>
-                            <textarea 
-                                id="bibliografia"
-                                name="bibliografia" 
-                                class="textarea textarea-bordered h-24 @error('bibliografia') textarea-error @enderror" 
-                                placeholder="Breve descrição do livro, sinopse, etc..."
-                            >{{ old('bibliografia') }}</textarea>
+                            <textarea id="bibliografia" name="bibliografia"
+                                class="textarea textarea-bordered h-24 @error('bibliografia') textarea-error @enderror"
+                                placeholder="Breve descrição do livro, sinopse, etc...">{{ old('bibliografia') }}</textarea>
                             @error('bibliografia')
                                 <label class="label">
                                     <span class="label-text-alt text-error">{{ $message }}</span>

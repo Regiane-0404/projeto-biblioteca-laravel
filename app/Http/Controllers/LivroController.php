@@ -161,7 +161,8 @@ class LivroController extends Controller
             'autores' => 'required|array|min:1',
             'autores.*' => 'exists:autors,id',
             'bibliografia' => 'nullable|string|max:1000',
-            'imagem_capa' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048'
+            'imagem_capa' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'quantidade' => 'required|integer|min:0',
         ], [
             'nome.required' => 'O nome do livro é obrigatório',
             'isbn.required' => 'O ISBN é obrigatório',
@@ -175,7 +176,10 @@ class LivroController extends Controller
             'autores.min' => 'Selecione pelo menos um autor',
             'imagem_capa.image' => 'O arquivo deve ser uma imagem',
             'imagem_capa.mimes' => 'Formatos aceitos: JPEG, PNG, JPG, GIF',
-            'imagem_capa.max' => 'A imagem não pode ser maior que 2MB'
+            'imagem_capa.max' => 'A imagem não pode ser maior que 2MB',
+            'quantidade.required' => 'A quantidade em estoque é obrigatória.',
+            'quantidade.integer' => 'A quantidade deve ser um número inteiro.',
+            'quantidade.min' => 'A quantidade não pode ser negativa.',
         ]);
 
         // 2. Upload da imagem se existir
@@ -193,6 +197,7 @@ class LivroController extends Controller
             'bibliografia' => $validated['bibliografia'],
             'imagem_capa' => $imagemPath,
             'ativo' => true, // Novo livro sempre ativo
+            'quantidade' => $validated['quantidade'],
         ]);
 
         // 4. Associar autores
@@ -236,7 +241,8 @@ class LivroController extends Controller
             'autores' => 'required|array|min:1',
             'autores.*' => 'exists:autors,id',
             'bibliografia' => 'nullable|string|max:1000',
-            'imagem_capa' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048'
+            'imagem_capa' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'quantidade' => 'required|integer|min:0',
         ], [
             'nome.required' => 'O nome do livro é obrigatório',
             'isbn.required' => 'O ISBN é obrigatório',
@@ -250,7 +256,10 @@ class LivroController extends Controller
             'autores.min' => 'Selecione pelo menos um autor',
             'imagem_capa.image' => 'O arquivo deve ser uma imagem',
             'imagem_capa.mimes' => 'Formatos aceitos: JPEG, PNG, JPG, GIF',
-            'imagem_capa.max' => 'A imagem não pode ser maior que 2MB'
+            'imagem_capa.max' => 'A imagem não pode ser maior que 2MB',
+            'quantidade.required' => 'A quantidade em estoque é obrigatória.',
+            'quantidade.integer' => 'A quantidade deve ser um número inteiro.',
+            'quantidade.min' => 'A quantidade não pode ser negativa.',
         ]);
 
         // 2. Upload da nova imagem se existir
@@ -273,6 +282,7 @@ class LivroController extends Controller
             'preco' => $validated['preco'],
             'bibliografia' => $validated['bibliografia'],
             'imagem_capa' => $imagemPath,
+            'quantidade' => $validated['quantidade'],
         ]);
 
         // 4. Atualizar autores (remover os antigos e adicionar os novos)
@@ -498,12 +508,15 @@ class LivroController extends Controller
         // 6. Finalmente, cria o Livro na nossa base de dados
         $novoLivro = Livro::create([
             'nome' => $dados['titulo'],
+            'ativo' => true,
+            'quantidade' => 1,
             'isbn' => $isbnNormalizado,
             'editora_id' => $editoraModel ? $editoraModel->id : null,
             'bibliografia' => 'Importado via Google Books API.', // Valor padrão
             'preco' => 0.00, // Valor padrão, pode ser editado depois
             'imagem_capa' => $dados['capa_url'], // Guardamos o URL da capa
             'ativo' => true,
+            'quantidade' => 1,
         ]);
 
         // 7. Associa os autores ao novo livro

@@ -72,7 +72,7 @@
                                 <tr>
                                     <th>Livro / ISBN</th>
                                     <th>Editora / Autores</th>
-                                    <th class="text-right">Preço</th>
+                                    <th class="text-center">Estoque</th> <!-- CABEÇALHO ALTERADO -->
                                     <th class="text-center">Status</th>
                                     <th>Ações</th>
                                 </tr>
@@ -94,7 +94,6 @@
                                                         }
                                                     }
                                                 @endphp
-
                                                 <div class="avatar">
                                                     <div class="mask mask-squircle w-12 h-12 bg-base-200">
                                                         @if ($imageUrl)
@@ -118,9 +117,22 @@
                                             <span
                                                 class="badge badge-ghost badge-sm">{{ $livro->autores->pluck('nome')->join(', ') ?: 'N/A' }}</span>
                                         </td>
-                                        <td class="text-right font-semibold">
-                                            €{{ number_format($livro->preco, 2, ',', '.') }}
+
+                                        <!-- CÉLULA DE ESTOQUE (SUBSTITUI A DE PREÇO) -->
+                                        <td class="text-center font-bold">
+                                            <div class="tooltip" data-tip="Exemplares disponíveis">
+                                                @if ($livro->quantidade > 5)
+                                                    <span class="text-success text-xl">👍
+                                                        {{ $livro->quantidade }}</span>
+                                                @elseif ($livro->quantidade > 0)
+                                                    <span class="text-warning text-xl">🏃‍♂️
+                                                        {{ $livro->quantidade }}</span>
+                                                @else
+                                                    <span class="text-error text-xl">👎 0</span>
+                                                @endif
+                                            </div>
                                         </td>
+
                                         <td class="text-center">
                                             @if ($livro->ativo)
                                                 <span class="badge badge-success">Ativo</span>
@@ -133,17 +145,14 @@
                                                 <a href="{{ route('livros.show', $livro) }}"
                                                     class="btn btn-sm btn-outline btn-accent"
                                                     title="Ver Detalhes">👁️</a>
-
                                                 @if (auth()->user()->role === 'admin')
                                                     <a href="{{ route('livros.edit', $livro) }}"
                                                         class="btn btn-sm btn-outline btn-info" title="Editar">✏️</a>
-
                                                     @if ($livro->ativo)
                                                         <form method="POST"
                                                             action="{{ route('livros.inativar', $livro) }}"
                                                             onsubmit="return confirm('Tem a certeza que deseja INATIVAR este livro?')">
-                                                            @csrf
-                                                            @method('PATCH')
+                                                            @csrf @method('PATCH')
                                                             <button type="submit"
                                                                 class="btn btn-sm btn-outline btn-warning"
                                                                 title="Inativar">⚠️</button>
@@ -152,8 +161,7 @@
                                                         <form method="POST"
                                                             action="{{ route('livros.ativar', $livro) }}"
                                                             onsubmit="return confirm('Tem a certeza que deseja ATIVAR este livro?')">
-                                                            @csrf
-                                                            @method('PATCH')
+                                                            @csrf @method('PATCH')
                                                             <button type="submit"
                                                                 class="btn btn-sm btn-outline btn-success"
                                                                 title="Ativar">✅</button>

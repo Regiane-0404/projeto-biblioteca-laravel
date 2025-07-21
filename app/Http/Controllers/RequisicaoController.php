@@ -48,9 +48,6 @@ class RequisicaoController extends Controller
         ]);
     }
 
-    /**
-     * Mostra o formulário para criar uma nova requisição, com pesquisa e paginação.
-     */
     public function create(Request $request)
     {
         $search = $request->get('search', '');
@@ -119,14 +116,13 @@ class RequisicaoController extends Controller
                     'data_fim_prevista' => now()->addDays(5)
                 ]);
 
-                // 1. Envia email para o Cidadão (já funciona)
-                //Mail::to($user->email)->send(new RequisicaoCriada($novaRequisicao));
+                // =============================================
+                //   DECREMENTA O ESTOQUE DO LIVRO
+                // =============================================
+                $livro->decrement('quantidade');
 
                 Mail::to($user->email)->queue(new RequisicaoCriada($novaRequisicao));
-
-                // 2. ADICIONAR ESTA LINHA PARA NOTIFICAR O ADMIN
-                $emailAdmin = 'regianecinel@gmail.com';
-                Mail::to($emailAdmin)->queue(new \App\Mail\NovaRequisicaoParaAdmin($novaRequisicao));
+                Mail::to('regianecinel@gmail.com')->queue(new \App\Mail\NovaRequisicaoParaAdmin($novaRequisicao));
 
                 $livrosCriados++;
             }
@@ -143,38 +139,34 @@ class RequisicaoController extends Controller
 
     public function entregar(Request $request, Requisicao $requisicao)
     {
-        // Apenas Admins podem confirmar a entrega
         if (auth()->user()->role !== 'admin') {
             abort(403, 'Ação não autorizada.');
         }
 
-        // 1. Validamos os dados do formulário, incluindo o novo campo
         $validated = $request->validate([
             'data_fim_real' => 'required|date',
             'observacoes' => 'nullable|string|max:500',
             'estado_devolucao' => 'required|string|in:intacto,marcas_uso,danificado,nao_devolvido',
         ]);
 
-        // 2. Preparamos a lógica de cálculo (continua igual)
         $dataFimReal = Carbon::parse($validated['data_fim_real']);
         $dataFimPrevista = $requisicao->data_fim_prevista;
         $diasAtraso = $dataFimReal->isAfter($dataFimPrevista)
             ? $dataFimReal->diffInDays($dataFimPrevista)
             : 0;
 
-        // 3. Atualizamos a requisição, agora incluindo o 'estado_devolucao'
         $requisicao->update([
             'status' => 'devolvido',
             'data_fim_real' => $dataFimReal,
             'observacoes' => $validated['observacoes'],
             'dias_atraso' => $diasAtraso,
-            'estado_devolucao' => $validated['estado_devolucao'], // <-- GUARDAMOS A NOVA INFORMAÇÃO
+            'estado_devolucao' => $validated['estado_devolucao'],
         ]);
 
-        // Lógica futura para multas poderia vir aqui
-        // if ($validated['estado_devolucao'] === 'danificado' || $validated['estado_devolucao'] === 'nao_devolvido') {
-        //     // Chamar um serviço de multas, por exemplo
-        // }
+        // =============================================
+        //   INCREMENTA O ESTOQUE DO LIVRO DEVOLVIDO
+        // =============================================
+        $requisicao->livro->increment('quantidade');
 
         return back()->with('success', 'Devolução registrada com sucesso!');
     }
