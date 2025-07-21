@@ -6,7 +6,8 @@ use App\Http\Controllers\{
     AutorController,
     EditoraController,
     RequisicaoController,
-    UserController
+    UserController,
+    HomeController
 };
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
@@ -18,10 +19,7 @@ use Illuminate\Support\Facades\Auth;
 |--------------------------------------------------------------------------
 */
 
-Route::get('/', function () {
-    return Auth::check() ? redirect()->route('dashboard') : redirect()->route('login');
-});
-
+Route::get('/', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
 
 /*
 |--------------------------------------------------------------------------
