@@ -108,6 +108,12 @@
                                         <p class="py-2 text-sm">Livro: <span
                                                 class="font-semibold">{{ $requisicao->livro->nome_visivel ?? 'N/A' }}</span>
                                         </p>
+                                        <!-- INFORMAÇÃO EXTRA NO MODAL -->
+                                        <p class="text-sm">Cidadão: <span
+                                                class="font-semibold">{{ $requisicao->user->name ?? 'N/A' }}</span></p>
+                                        <p class="text-sm">Pontuação Atual: <span
+                                                class="font-bold text-primary">{{ $requisicao->user->pontos ?? 'N/A' }}</span>
+                                        </p>
                                         <form method="POST" action="{{ route('requisicoes.entregar', $requisicao) }}"
                                             class="mt-4 space-y-4">
                                             @csrf @method('PATCH')
@@ -136,7 +142,8 @@
 
                                             <div>
                                                 <label class="label"><span class="label-text">Observações
-                                                        (opcional)</span></label>
+                                                        (opcional)
+                                                    </span></label>
                                                 <textarea name="observacoes" class="textarea textarea-bordered w-full"
                                                     placeholder="Ex: Livro devolvido com uma pequena marca na capa..."></textarea>
                                             </div>
@@ -195,5 +202,10 @@
 </div>
 
 <div class="mt-6">
-    {{ $requisicoes->links() }}
+    <!-- Paginação (só aparece se a coleção for paginada) -->
+    @if ($requisicoes instanceof \Illuminate\Pagination\LengthAwarePaginator)
+        <div class="mt-6">
+            {{ $requisicoes->links() }}
+        </div>
+    @endif
 </div>

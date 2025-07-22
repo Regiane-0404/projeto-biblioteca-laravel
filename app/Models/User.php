@@ -26,6 +26,7 @@ class User extends Authenticatable
         'password',
         'role', // Verifique se 'role' e 'ativo' estão no seu fillable
         'ativo',
+        'pontos',
     ];
 
     /**

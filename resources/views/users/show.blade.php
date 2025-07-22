@@ -13,27 +13,35 @@
             <!-- Card de Informações do Usuário -->
             <div class="card bg-base-100 shadow-xl mb-6">
                 <div class="card-body">
-                    <div class="flex items-center gap-4">
-                        <div class="avatar">
-                            <div class="w-16 rounded-full">
-                                <img src="{{ $user->profile_photo_url }}" alt="{{ $user->name }}" />
+                    <div class="flex justify-between items-start">
+                        <!-- Informações do Usuário à Esquerda -->
+                        <div class="flex items-center gap-4">
+                            <div class="avatar">
+                                <div class="w-16 rounded-full">
+                                    <img src="{{ $user->profile_photo_url }}" alt="{{ $user->name }}" />
+                                </div>
+                            </div>
+                            <div>
+                                <h2 class="card-title text-2xl font-bold">{{ $user->name }}</h2>
+                                <p class="text-gray-600">{{ $user->email }}</p>
+                                <div class="mt-2 flex gap-2">
+                                    @if ($user->role === 'admin')
+                                        <span class="badge badge-error text-white">👑 Administrador</span>
+                                    @else
+                                        <span class="badge badge-info text-white">👤 Cidadão</span>
+                                    @endif
+                                    @if ($user->ativo)
+                                        <span class="badge badge-success text-white">✅ Ativo</span>
+                                    @else
+                                        <span class="badge badge-warning text-white">⚠️ Inativo</span>
+                                    @endif
+                                </div>
                             </div>
                         </div>
-                        <div>
-                            <h2 class="card-title text-2xl font-bold">{{ $user->name }}</h2>
-                            <p class="text-gray-600">{{ $user->email }}</p>
-                            <div class="mt-2 flex gap-2">
-                                @if ($user->role === 'admin')
-                                    <span class="badge badge-error text-white">👑 Administrador</span>
-                                @else
-                                    <span class="badge badge-info text-white">👤 Cidadão</span>
-                                @endif
-                                @if ($user->ativo)
-                                    <span class="badge badge-success text-white">✅ Ativo</span>
-                                @else
-                                    <span class="badge badge-warning text-white">⚠️ Inativo</span>
-                                @endif
-                            </div>
+                        <!-- Pontuação à Direita -->
+                        <div class="text-right">
+                            <div class="stat-title">Pontuação</div>
+                            <div class="stat-value text-primary">🏆 {{ $user->pontos }}</div>
                         </div>
                     </div>
                 </div>
