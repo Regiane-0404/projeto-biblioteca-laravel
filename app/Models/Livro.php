@@ -64,4 +64,23 @@ class Livro extends Model
         // A nova regra: um livro está disponível se a sua quantidade em estoque for maior que zero.
         return $this->quantidade > 0;
     }
+
+    /**
+     * Verifica se o livro pode ser excluído.
+     * Um livro só pode ser excluído se NUNCA teve uma requisição.
+     */
+    public function podeSerExcluido()
+    {
+        // O método has() verifica se a relação 'requisicoes' tem pelo menos um registo.
+        // Nós retornamos o oposto: se NÃO TEM requisições, pode ser excluído.
+        return !$this->requisicoes()->exists();
+    }
+
+    /**
+     * Obtém todas as reviews para este livro.
+     */
+    public function reviews()
+    {
+        return $this->hasMany(Review::class);
+    }
 }

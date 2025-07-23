@@ -57,6 +57,12 @@ Route::middleware([
     Route::post('/requisicoes', [RequisicaoController::class, 'store'])->name('requisicoes.store');
     Route::delete('/requisicoes/{requisicao}/cancelar', [RequisicaoController::class, 'cancelar'])->name('requisicoes.cancelar');
 
+    // =============================================
+    //   ROTAS DE REVIEW (movidas para fora de admin)
+    // =============================================
+    Route::get('/requisicoes/{requisicao}/review', [RequisicaoController::class, 'mostrarFormularioReview'])->name('reviews.create');
+    Route::post('/requisicoes/{requisicao}/review', [RequisicaoController::class, 'guardarReview'])->name('reviews.store');
+
 
     /*
     |--------------------------------------------------------------------------
@@ -78,7 +84,6 @@ Route::middleware([
         Route::get('/livros/importar/pesquisar', [LivroController::class, 'pesquisarNaGoogleAPI'])->name('livros.importar.pesquisar');
         Route::post('/livros/importar', [LivroController::class, 'importarLivro'])->name('livros.importar.store');
         Route::post('/livros/importar', [LivroController::class, 'guardarLivroImportado'])->name('livros.importar.store');
-
 
         // AUTORES
         Route::get('/autores/create', [AutorController::class, 'create'])->name('autores.create');

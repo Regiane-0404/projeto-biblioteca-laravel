@@ -31,13 +31,32 @@
                     <td>{{ optional($requisicao->data_inicio)->format('d/m/Y') }}</td>
                     <td>{{ optional($requisicao->data_fim_prevista)->format('d/m/Y') }}</td>
                     <td>
+                        @php
+                            // Verificamos no backend se já existe uma review para este livro deste usuário
+                            $jaAvaliou = \App\Models\Review::where('user_id', $requisicao->user_id)
+                                ->where('livro_id', $requisicao->livro_id)
+                                ->exists();
+                        @endphp
+
                         {{-- O Cidadão só pode cancelar se o status for 'solicitado' --}}
                         @if ($requisicao->status === 'solicitado')
-                            <form action="{{ route('requisicoes.cancelar', $requisicao) }}" method="POST" onsubmit="return confirm('Tem a certeza que deseja cancelar o seu pedido?')">
+                            <form action="{{ route('requisicoes.cancelar', $requisicao) }}" method="POST"
+                                onsubmit="return confirm('Tem a certeza que deseja cancelar o seu pedido?')">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="btn btn-sm btn-outline btn-error">Cancelar Pedido</button>
                             </form>
+
+                            {{-- Ele só pode avaliar se o status for 'devolvido' E se ainda não avaliou --}}
+                        @elseif ($requisicao->status === 'devolvido' && !$jaAvaliou)
+                            <a href="{{ route('reviews.create', $requisicao) }}"
+                                class="btn btn-sm btn-outline btn-primary">
+                                ⭐ Avaliar Livro
+                            </a>
+
+                            {{-- Se já avaliou, mostramos uma mensagem --}}
+                        @elseif ($requisicao->status === 'devolvido' && $jaAvaliou)
+                            <span class="text-sm text-success italic">Avaliação enviada</span>
                         @else
                             <span>-</span>
                         @endif

@@ -295,44 +295,27 @@ class LivroController extends Controller
 
     public function destroy(Livro $livro)
     {
-        $nome = $livro->nome;
-
-        // VALIDAÇÃO DE DEPENDÊNCIAS MELHORADA
-        $dependencias = [];
-
-        // Verificar autores
-        if ($livro->autores->count() > 0) {
-            $autores = $livro->autores->pluck('nome')->toArray();
-            $dependencias[] = "Autores: " . implode(', ', $autores);
+        // 1. Usamos a mesma verificação segura que está no Modelo e na View.
+        // A regra é clara: só podemos excluir se NUNCA teve requisições.
+        if (!$livro->podeSerExcluido()) {
+            return back()->with('error', "Não é possível excluir o livro '{$livro->nome}' porque ele possui um histórico de requisições.");
         }
 
-        // Verificar editora (opcional - só se quiser também)
-        if ($livro->editora) {
-            $dependencias[] = "Editora: " . $livro->editora->nome;
-        }
+        // 2. Antes de apagar o livro, precisamos de limpar a sua relação
+        // na tabela pivot 'autor_livro' para evitar erros.
+        $livro->autores()->detach();
 
-        // SE TEM DEPENDÊNCIAS, NÃO PERMITIR EXCLUSÃO
-        if (!empty($dependencias)) {
-            return redirect()->route('livros.index')
-                ->with('error', "❌ Não foi possível excluir o livro \"{$nome}\". Este livro possui dados associados. ");
-        }
-
-        // SE NÃO TEM DEPENDÊNCIAS, PODE EXCLUIR
-        try {
-            // Deletar imagem se existir
-            if ($livro->imagem_capa && Storage::disk('public')->exists($livro->imagem_capa)) {
+        // 3. Se a imagem da capa for um ficheiro local, apagamo-la.
+        if ($livro->imagem_capa && !str_starts_with($livro->imagem_capa, 'http')) {
+            if (Storage::disk('public')->exists($livro->imagem_capa)) {
                 Storage::disk('public')->delete($livro->imagem_capa);
             }
-
-            // Deletar registro
-            $livro->delete();
-
-            return redirect()->route('livros.index')
-                ->with('success', "✅ Livro \"{$nome}\" foi excluído permanentemente do sistema!");
-        } catch (\Exception $e) {
-            return redirect()->route('livros.index')
-                ->with('error', "❌ Erro ao excluir o livro. Tente novamente ou contacte o suporte.");
         }
+
+        // 4. Agora sim, podemos apagar o livro com segurança.
+        $livro->delete();
+
+        return redirect()->route('livros.index')->with('success', "O livro '{$livro->nome}' foi excluído com sucesso.");
     }
 
     public function inativar(Livro $livro)

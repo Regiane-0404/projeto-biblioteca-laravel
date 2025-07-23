@@ -14,7 +14,6 @@
 
     <div class="py-6">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            {{-- Mensagens de Feedback --}}
             @if (session('success'))
                 <div role="alert" class="alert alert-success mb-6"><span>{{ session('success') }}</span></div>
             @endif
@@ -27,7 +26,6 @@
 
             <div class="card bg-base-100 shadow-xl">
                 <div class="card-body">
-                    <!-- Filtros e Pesquisa -->
                     <form method="GET" action="{{ route('livros.index') }}" class="mb-4">
                         <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
                             <div class="form-control md:col-span-2">
@@ -43,7 +41,8 @@
                                     @foreach ($editoras as $editora)
                                         <option value="{{ $editora->id }}"
                                             {{ request('editora') == $editora->id ? 'selected' : '' }}>
-                                            {{ $editora->nome }}</option>
+                                            {{ $editora->nome }}
+                                        </option>
                                     @endforeach
                                 </select>
                             </div>
@@ -55,7 +54,6 @@
                         </div>
                     </form>
 
-                    <!-- Botões de Filtro de Status -->
                     <div class="flex justify-start gap-2 mb-6 border-t pt-4 mt-4 border-base-300">
                         <a href="{{ route('livros.index', array_merge(request()->query(), ['status' => 'ativo'])) }}"
                             class="btn btn-sm {{ request('status', 'ativo') == 'ativo' ? 'btn-active btn-success' : 'btn-ghost' }}">Ativos</a>
@@ -65,14 +63,13 @@
                             class="btn btn-sm {{ request('status') == 'todos' ? 'btn-active' : 'btn-ghost' }}">Todos</a>
                     </div>
 
-                    <!-- Tabela de Livros -->
                     <div class="overflow-x-auto">
                         <table class="table w-full">
                             <thead>
                                 <tr>
                                     <th>Livro / ISBN</th>
                                     <th>Editora / Autores</th>
-                                    <th class="text-center">Estoque</th> <!-- CABEÇALHO ALTERADO -->
+                                    <th class="text-center">Estoque</th>
                                     <th class="text-center">Status</th>
                                     <th>Ações</th>
                                 </tr>
@@ -117,8 +114,6 @@
                                             <span
                                                 class="badge badge-ghost badge-sm">{{ $livro->autores->pluck('nome')->join(', ') ?: 'N/A' }}</span>
                                         </td>
-
-                                        <!-- CÉLULA DE ESTOQUE (SUBSTITUI A DE PREÇO) -->
                                         <td class="text-center font-bold">
                                             <div class="tooltip" data-tip="Exemplares disponíveis">
                                                 @if ($livro->quantidade > 5)
@@ -132,7 +127,6 @@
                                                 @endif
                                             </div>
                                         </td>
-
                                         <td class="text-center">
                                             @if ($livro->ativo)
                                                 <span class="badge badge-success">Ativo</span>
@@ -140,31 +134,46 @@
                                                 <span class="badge badge-warning">Inativo</span>
                                             @endif
                                         </td>
-                                        <td>
-                                            <div class="flex items-center gap-2">
+                                        <td class="py-4">
+                                            <div class="flex items-center gap-1">
                                                 <a href="{{ route('livros.show', $livro) }}"
-                                                    class="btn btn-sm btn-outline btn-accent"
-                                                    title="Ver Detalhes">👁️</a>
+                                                    class="btn btn-ghost btn-sm" title="Ver Detalhes">👁️</a>
+
                                                 @if (auth()->user()->role === 'admin')
                                                     <a href="{{ route('livros.edit', $livro) }}"
-                                                        class="btn btn-sm btn-outline btn-info" title="Editar">✏️</a>
+                                                        class="btn btn-ghost btn-sm" title="Editar">✏️</a>
+
                                                     @if ($livro->ativo)
                                                         <form method="POST"
                                                             action="{{ route('livros.inativar', $livro) }}"
                                                             onsubmit="return confirm('Tem a certeza que deseja INATIVAR este livro?')">
-                                                            @csrf @method('PATCH')
+                                                            @csrf
+                                                            @method('PATCH')
                                                             <button type="submit"
-                                                                class="btn btn-sm btn-outline btn-warning"
+                                                                class="btn btn-ghost btn-sm text-warning"
                                                                 title="Inativar">⚠️</button>
                                                         </form>
                                                     @else
                                                         <form method="POST"
                                                             action="{{ route('livros.ativar', $livro) }}"
                                                             onsubmit="return confirm('Tem a certeza que deseja ATIVAR este livro?')">
-                                                            @csrf @method('PATCH')
+                                                            @csrf
+                                                            @method('PATCH')
                                                             <button type="submit"
-                                                                class="btn btn-sm btn-outline btn-success"
+                                                                class="btn btn-ghost btn-sm text-success"
                                                                 title="Ativar">✅</button>
+                                                        </form>
+                                                    @endif
+
+                                                    @if ($livro->podeSerExcluido())
+                                                        <form method="POST"
+                                                            action="{{ route('livros.destroy', $livro) }}"
+                                                            onsubmit="return confirm('Tem a certeza que deseja EXCLUIR este livro permanentemente? Esta ação não pode ser desfeita.');">
+                                                            @csrf
+                                                            @method('DELETE')
+                                                            <button type="submit"
+                                                                class="btn btn-ghost btn-sm text-error"
+                                                                title="Excluir Permanentemente">🗑️</button>
                                                         </form>
                                                     @endif
                                                 @endif

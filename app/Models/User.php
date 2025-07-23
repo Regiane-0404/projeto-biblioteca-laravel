@@ -75,4 +75,12 @@ class User extends Authenticatable
     {
         return $this->hasMany(Requisicao::class)->whereIn('status', ['solicitado', 'aprovado']);
     }
+
+    /**
+     * Obtém todas as reviews feitas por este usuário.
+     */
+    public function reviews()
+    {
+        return $this->hasMany(Review::class);
+    }
 }

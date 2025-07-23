@@ -2,7 +2,7 @@
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 
 <head>
-    <meta charset="utf-t">
+    <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{{ config('app.name', 'Laravel') }} - Bem-vindo</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -67,10 +67,12 @@
                 </form>
             </div>
 
-            <!-- Grelha de Livros (VERSÃO CORRIGIDA) -->
+            <!-- Grelha de Livros com Modais -->
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                 @forelse ($livros as $livro)
-                    <div class="card bg-base-100 shadow-xl transition-transform hover:scale-105">
+                    <!-- O Card do Livro agora abre o modal com onclick() -->
+                    <div class="card bg-base-100 shadow-xl transition-transform hover:scale-105 cursor-pointer"
+                        onclick="modal_livro_{{ $livro->id }}.showModal()">
                         <figure class="px-4 pt-4 h-64">
                             @php
                                 $imageUrl = null;
@@ -104,6 +106,71 @@
                             </div>
                         </div>
                     </div>
+
+                    <!-- ============================================= -->
+                    <!--     O MODAL ESCONDIDO PARA CADA LIVRO         -->
+                    <!-- ============================================= -->
+                    <dialog id="modal_livro_{{ $livro->id }}" class="modal">
+                        <div class="modal-box w-11/12 max-w-3xl">
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                <!-- Coluna da Capa -->
+                                <div class="md:col-span-1">
+                                    @if ($imageUrl)
+                                        <img src="{{ $imageUrl }}" alt="Capa de {{ $livro->nome }}"
+                                            class="rounded-lg shadow-lg w-full" />
+                                    @else
+                                        <div
+                                            class="w-full h-full bg-base-200 rounded-lg flex items-center justify-center">
+                                            <span class="text-6xl opacity-30">📚</span></div>
+                                    @endif
+                                </div>
+                                <!-- Coluna das Informações -->
+                                <div class="md:col-span-2">
+                                    <h3 class="font-bold text-2xl">{{ $livro->nome }}</h3>
+                                    <p class="text-sm mt-1">
+                                        <strong>Autor(es):</strong>
+                                        {{ $livro->autores->pluck('nome')->join(', ') ?: 'Não informado' }}<br>
+                                        <strong>Editora:</strong> {{ $livro->editora->nome ?? 'Não informada' }}
+                                    </p>
+                                    <p class="text-sm font-mono mt-2"><strong>ISBN:</strong>
+                                        {{ $livro->isbn ?? 'Não disponível' }}</p>
+
+                                    <div class="divider"></div>
+
+                                    <h4 class="font-semibold mb-2">Sobre o Livro</h4>
+                                    <p class="text-base-content/80 text-sm max-h-48 overflow-y-auto">
+                                        {{ $livro->bibliografia ?: 'Sem sinopse disponível.' }}
+                                    </p>
+
+                                    <!-- Call to Action -->
+                                    <div class="alert alert-info mt-6">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                            class="stroke-current shrink-0 w-6 h-6">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                        </svg>
+                                        <div>
+                                            <h3 class="font-bold">Gostou?</h3>
+                                            <div class="text-xs">Para requisitar este livro, faça o seu registo ou entre
+                                                na sua conta!</div>
+                                        </div>
+                                        <div class="space-x-2">
+                                            <a href="{{ route('login') }}" class="btn btn-sm">Login</a>
+                                            <a href="{{ route('register') }}"
+                                                class="btn btn-sm btn-primary">Registar</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Botão para fechar -->
+                            <div class="modal-action">
+                                <form method="dialog">
+                                    <button class="btn">Fechar</button>
+                                </form>
+                            </div>
+                        </div>
+                    </dialog>
+
                 @empty
                     <p class="col-span-full text-center py-10 text-xl text-base-content/50">Nenhum livro encontrado com
                         os filtros atuais.</p>

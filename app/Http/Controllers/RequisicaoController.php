@@ -13,6 +13,8 @@ use App\Mail\NovaRequisicaoParaAdmin;
 use Carbon\Carbon;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Pagination\LengthAwarePaginator;
+use App\Models\Review;
+
 
 class RequisicaoController extends Controller
 {
@@ -169,5 +171,58 @@ class RequisicaoController extends Controller
     private function removeAcentos($string)
     {
         return strtolower(iconv('UTF-8', 'ASCII//TRANSLIT', $string ?? ''));
+    }
+
+    /**
+     * Mostra o formulário para um Cidadão criar uma review para um livro devolvido.
+     */
+    public function mostrarFormularioReview(Requisicao $requisicao)
+    {
+        // Política de Segurança: Garante que o usuário só pode avaliar a sua própria requisição,
+        // e apenas se ela já foi devolvida e ainda não tem uma review.
+        if (
+            $requisicao->user_id !== auth()->id() ||
+            $requisicao->status !== 'devolvido' ||
+            \App\Models\Review::where('user_id', auth()->id())->where('livro_id', $requisicao->livro_id)->exists()
+        ) {
+
+            abort(403, 'Ação não autorizada.');
+        }
+
+        return view('reviews.create', compact('requisicao'));
+    }
+
+    /**
+     * Guarda a nova review submetida pelo Cidadão.
+     */
+    public function guardarReview(Request $request, Requisicao $requisicao)
+    {
+        // Repetimos a mesma política de segurança para o caso de submissão direta
+        if (
+            $requisicao->user_id !== auth()->id() ||
+            $requisicao->status !== 'devolvido' ||
+            \App\Models\Review::where('user_id', auth()->id())->where('livro_id', $requisicao->livro_id)->exists()
+        ) {
+
+            abort(403, 'Ação não autorizada.');
+        }
+
+        // Validação dos dados do formulário
+        $validated = $request->validate([
+            'classificacao' => 'required|integer|min:1|max:5',
+            'comentario' => 'nullable|string|max:2000',
+        ]);
+
+        // Cria a review na base de dados
+        \App\Models\Review::create([
+            'user_id' => auth()->id(),
+            'livro_id' => $requisicao->livro_id,
+            'classificacao' => $validated['classificacao'],
+            'comentario' => $validated['comentario'],
+            'status' => 'pendente', // Todas as reviews começam como pendentes
+        ]);
+
+        return redirect()->route('requisicoes.index')
+            ->with('success', 'A sua avaliação foi submetida com sucesso e aguarda moderação. Obrigado!');
     }
 }
