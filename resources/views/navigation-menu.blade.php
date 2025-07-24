@@ -81,13 +81,15 @@
                 </details>
             </li>
 
-            @if (auth()->user()->role === 'admin')
+            @if (Auth::user()->role === 'admin')
                 <li>
                     <details>
-                        <summary class="text-base">👥 Usuários</summary>
+                        <summary>👥 Usuários</summary>
                         <ul class="p-2 bg-base-100 rounded-t-none z-[1]">
-                            <li><a href="{{ route('users.index') }}">👥 Listar Usuários</a></li>
+                            <li><a href="{{ route('users.index') }}">Listar Usuários</a></li>
                             <li><a href="{{ route('users.create') }}">➕ Novo Usuário</a></li>
+                            <div class="divider my-1"></div>
+                            <li><a href="{{ route('admin.reviews.index') }}">⭐ Moderar Avaliações</a></li>
                         </ul>
                     </details>
                 </li>

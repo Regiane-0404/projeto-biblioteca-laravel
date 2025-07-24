@@ -6,6 +6,7 @@ use App\Http\Controllers\{
     AutorController,
     EditoraController,
     RequisicaoController,
+    ReviewController,
     UserController,
     HomeController
 };
@@ -105,6 +106,11 @@ Route::middleware([
 
         // Ações administrativas em requisições
         Route::patch('/requisicoes/{requisicao}/aprovar', [RequisicaoController::class, 'aprovar'])->name('requisicoes.aprovar');
+        // Gestão de Reviews (Admin)
+        Route::get('/reviews', [App\Http\Controllers\ReviewController::class, 'index'])->name('admin.reviews.index');
+        Route::patch('/reviews/{review}/aprovar', [ReviewController::class, 'aprovar'])->name('admin.reviews.aprovar');
+        Route::get('/reviews/{review}/recusar', [ReviewController::class, 'mostrarFormularioRecusa'])->name('admin.reviews.recusar.form');
+        Route::patch('/reviews/{review}/recusar', [ReviewController::class, 'recusar'])->name('admin.reviews.recusar.submit');
         Route::patch('/requisicoes/{requisicao}/entregar', [RequisicaoController::class, 'entregar'])->name('requisicoes.entregar');
     });
 });
