@@ -83,4 +83,12 @@ class User extends Authenticatable
     {
         return $this->hasMany(Review::class);
     }
+
+    /**
+     * Obtém os alertas de disponibilidade para este usuário.
+     */
+    public function alertasDisponibilidade()
+    {
+        return $this->hasMany(AlertaDisponibilidade::class);
+    }
 }

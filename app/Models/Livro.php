@@ -136,4 +136,12 @@ class Livro extends Model
             ->sortByDesc('pontuacao_similaridade')
             ->take($limite);
     }
+
+    /**
+     * Obtém os alertas de disponibilidade para este livro.
+     */
+    public function alertasDisponibilidade()
+    {
+        return $this->hasMany(AlertaDisponibilidade::class);
+    }
 }

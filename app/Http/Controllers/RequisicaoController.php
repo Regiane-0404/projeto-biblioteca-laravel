@@ -2,9 +2,12 @@
 
 namespace App\Http\Controllers;
 
+// ... (todos os seus 'use' statements permanecem iguais)
 use App\Models\Requisicao;
 use App\Models\Livro;
 use App\Models\User;
+use App\Models\AlertaDisponibilidade;
+use App\Mail\LivroDisponivelAlerta;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
@@ -16,27 +19,25 @@ use Illuminate\Pagination\Paginator;
 use Illuminate\Pagination\LengthAwarePaginator;
 use App\Models\Review;
 
-
-
 class RequisicaoController extends Controller
 {
+    // ... (os métodos index, create, store, aprovar permanecem exatamente iguais) ...
+
     public function index(Request $request)
     {
         $user = auth()->user();
-        $stats = []; // Para os indicadores do admin
+        $stats = [];
 
-        // Prepara os dados que a view vai precisar, com valores padrão
         $viewData = [
             'stats' => [],
             'filtro_status' => $request->status,
             'filtro_data_de' => $request->data_de,
             'filtro_data_ate' => $request->data_ate,
-            'active_tab' => 'visao_geral', // Por defeito, a visão geral está ativa
-            'requisicoes' => collect(), // Começa com uma coleção vazia
+            'active_tab' => 'visao_geral',
+            'requisicoes' => collect(),
         ];
 
         if ($user->role === 'admin') {
-            // --- LÓGICA DO ADMIN ---
             $viewData['stats'] = [
                 'ativas' => Requisicao::whereIn('status', ['solicitado', 'aprovado'])->count(),
                 'ultimos_30_dias' => Requisicao::where('created_at', '>=', now()->subDays(30))->count(),
@@ -45,32 +46,25 @@ class RequisicaoController extends Controller
 
             $query = Requisicao::query();
 
-            // Se o usuário está a filtrar ativamente, ativamos a aba da lista e aplicamos os filtros.
             if ($request->hasAny(['data_de', 'data_ate', 'status'])) {
                 $viewData['active_tab'] = 'lista';
                 if ($request->filled('status')) $query->where('status', $request->status);
                 if ($request->filled('data_de')) $query->whereDate('created_at', '>=', $request->data_de);
                 if ($request->filled('data_ate')) $query->whereDate('created_at', '<=', $request->data_ate);
 
-                // Com filtros, usamos paginação.
                 $viewData['requisicoes'] = $query->with(['user', 'livro'])->latest()->paginate(10)->withQueryString();
             } else {
-                // VISÃO PADRÃO (sem filtros): Mostra apenas as da semana atual, SEM paginação.
-                // A aba ativa continua a ser a 'visao_geral' por defeito.
-                // No entanto, vamos buscar os dados para o caso de ele clicar na aba 'Lista Completa'.
                 $viewData['active_tab'] = $request->has('tab') ? 'lista' : 'visao_geral';
 
                 if ($viewData['active_tab'] === 'lista') {
                     $query->whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()]);
-                    $viewData['requisicoes'] = $query->with(['user', 'livro'])->latest()->get(); // Usamos ->get() para não paginar
+                    $viewData['requisicoes'] = $query->with(['user', 'livro'])->latest()->get();
                 }
             }
         } else {
-            // --- LÓGICA DO CIDADÃO (simples, com paginação) ---
             $viewData['requisicoes'] = $user->requisicoes()->with(['livro'])->latest()->paginate(10)->withQueryString();
         }
 
-        // Desencriptação final para qualquer coleção que tenha sido carregada.
         if ($viewData['requisicoes']->isNotEmpty()) {
             $colecao = ($viewData['requisicoes'] instanceof \Illuminate\Pagination\LengthAwarePaginator)
                 ? $viewData['requisicoes']->getCollection()
@@ -115,24 +109,42 @@ class RequisicaoController extends Controller
 
     public function store(Request $request)
     {
-        $validated = $request->validate(['livros_ids' => 'required|array|min:1|max:3', 'livros_ids.*' => 'exists:livros,id']);
+        $validated = $request->validate([
+            'livros_ids' => 'required|array|min:1|max:3',
+            'livros_ids.*' => 'exists:livros,id',
+        ], ['livros_ids.required' => 'Você precisa de selecionar pelo menos um livro.']);
+
         $user = Auth::user();
         if ($user->requisicoesAtivas()->count() + count($validated['livros_ids']) > 3) {
             return back()->with('error', 'Limite de 3 requisições ativas atingido.');
         }
+
         $livrosCriados = 0;
         foreach ($validated['livros_ids'] as $livro_id) {
             $livro = Livro::find($livro_id);
+
             if ($livro && $livro->isDisponivel()) {
-                $novaRequisicao = Requisicao::create(['user_id' => $user->id, 'livro_id' => $livro_id, 'data_inicio' => now(), 'data_fim_prevista' => now()->addDays(5)]);
+                $novaRequisicao = Requisicao::create([
+                    'user_id' => $user->id,
+                    'livro_id' => $livro_id,
+                    'data_inicio' => now(),
+                    'data_fim_prevista' => now()->addDays(5),
+                ]);
                 $livro->decrement('quantidade');
+
                 Mail::to($user->email)->queue(new RequisicaoCriada($novaRequisicao));
                 Mail::to('regianecinel@gmail.com')->queue(new NovaRequisicaoParaAdmin($novaRequisicao));
+
                 $livrosCriados++;
             }
         }
-        $mensagem = "$livrosCriados requisição(ões) criada(s) com sucesso! Foi enviado um email de confirmação.";
-        return redirect()->route('requisicoes.index')->with('success', $mensagem);
+
+        if ($livrosCriados > 0) {
+            $mensagem = "$livrosCriados requisição(ões) criada(s) com sucesso! Foi enviado um email de confirmação.";
+            return redirect()->route('requisicoes.index')->with('success', $mensagem);
+        } else {
+            return back()->with('error', 'Não foi possível criar a requisição. Os livros selecionados podem já não estar disponíveis.');
+        }
     }
 
     public function aprovar(Requisicao $requisicao)
@@ -143,13 +155,52 @@ class RequisicaoController extends Controller
 
     public function entregar(Request $request, Requisicao $requisicao)
     {
-        $validated = $request->validate(['data_fim_real' => 'required|date', 'observacoes' => 'nullable|string|max:500', 'estado_devolucao' => 'required|string|in:intacto,marcas_uso,danificado,nao_devolvido']);
+        // 1. Validação dos dados do formulário
+        $validated = $request->validate([
+            'data_fim_real' => 'required|date',
+            'observacoes' => 'nullable|string|max:500',
+            'estado_devolucao' => 'required|string|in:intacto,marcas_uso,danificado,nao_devolvido'
+        ]);
+
+        // 2. Cálculo e atualização dos dados da requisição
         $dataFimReal = Carbon::parse($validated['data_fim_real']);
         $diasAtraso = $dataFimReal->isAfter($requisicao->data_fim_prevista) ? $dataFimReal->diffInDays($requisicao->data_fim_prevista) : 0;
-        $requisicao->update(['status' => 'devolvido', 'data_fim_real' => $dataFimReal, 'observacoes' => $validated['observacoes'], 'dias_atraso' => $diasAtraso, 'estado_devolucao' => $validated['estado_devolucao']]);
+        $requisicao->update([
+            'status' => 'devolvido',
+            'data_fim_real' => $dataFimReal,
+            'observacoes' => $validated['observacoes'],
+            'dias_atraso' => $diasAtraso,
+            'estado_devolucao' => $validated['estado_devolucao']
+        ]);
+
+        // 3. Lógica para devolver o livro ao estoque (se aplicável) e disparar alertas
         if (in_array($validated['estado_devolucao'], ['intacto', 'marcas_uso', 'danificado'])) {
-            $requisicao->livro->increment('quantidade');
+
+            $livroDevolvido = $requisicao->livro;
+            $quantidadeAntiga = $livroDevolvido->quantidade;
+
+            
+
+            // Primeiro, incrementamos a quantidade
+            $livroDevolvido->increment('quantidade');
+
+            // SÓ DEPOIS, verificamos se a quantidade ANTIGA era zero para disparar o alerta
+            if ($quantidadeAntiga === 0) {
+                $alertas = AlertaDisponibilidade::where('livro_id', $livroDevolvido->id)
+                    ->with('user')
+                    ->get();
+
+                foreach ($alertas as $alerta) {
+                    if ($alerta->user) {
+                        Mail::to($alerta->user->email)->queue(new LivroDisponivelAlerta($livroDevolvido, $alerta->user));
+                    }
+                    // Apagamos o alerta depois de o usar
+                    $alerta->delete();
+                }
+            }
         }
+
+        // 4. Lógica de dedução de pontos do usuário (se aplicável)
         $user = User::find($requisicao->user_id);
         if ($user) {
             $pontos_a_deduzir = 0;
@@ -157,8 +208,11 @@ class RequisicaoController extends Controller
             if ($validated['estado_devolucao'] === 'nao_devolvido') $pontos_a_deduzir = 50;
             if ($pontos_a_deduzir > 0) $user->decrement('pontos', $pontos_a_deduzir);
         }
+
+        // 5. Retornar com mensagem de sucesso
         return back()->with('success', 'Devolução registrada com sucesso!');
     }
+
 
     public function cancelar(Requisicao $requisicao)
     {
@@ -175,28 +229,19 @@ class RequisicaoController extends Controller
         return strtolower(iconv('UTF-8', 'ASCII//TRANSLIT', $string ?? ''));
     }
 
-    /**
-     * Mostra o formulário para um Cidadão criar uma review para um livro devolvido.
-     */
     public function mostrarFormularioReview(Requisicao $requisicao)
     {
-        // Política de Segurança: Garante que o usuário só pode avaliar a sua própria requisição,
-        // e apenas se ela já foi devolvida e ainda não tem uma review.
         if (
             $requisicao->user_id !== auth()->id() ||
             $requisicao->status !== 'devolvido' ||
-            \App\Models\Review::where('user_id', auth()->id())->where('livro_id', $requisicao->livro_id)->exists()
+            Review::where('user_id', auth()->id())->where('livro_id', $requisicao->livro_id)->exists()
         ) {
-
             abort(403, 'Ação não autorizada.');
         }
 
         return view('reviews.create', compact('requisicao'));
     }
 
-    /**
-     * Guarda a nova review submetida pelo Cidadão.
-     */
     public function guardarReview(Request $request, Requisicao $requisicao)
     {
         if ($requisicao->user_id !== auth()->id() || $requisicao->status !== 'devolvido' || Review::where('user_id', auth()->id())->where('livro_id', $requisicao->livro_id)->exists()) {
@@ -216,10 +261,6 @@ class RequisicaoController extends Controller
             'status' => 'pendente',
         ]);
 
-        // =======================================================
-        // AQUI ESTÁ A CORREÇÃO DE SINTAXE
-        // =======================================================
-        // Trocamos ".Mail." por "\Mail\"
         $emailAdmin = 'regianecinel@gmail.com';
         Mail::to($emailAdmin)->queue(new NovaReviewParaAdmin($novaReview));
 

@@ -20,7 +20,7 @@ use Illuminate\Support\Facades\Auth;
 |--------------------------------------------------------------------------
 */
 
-Route::get('/', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
+Route::get('/', [HomeController::class, 'index'])->name('home');
 
 /*
 |--------------------------------------------------------------------------
@@ -39,28 +39,29 @@ Route::middleware([
     |--------------------------------------------------------------------------
     */
 
-    // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-    // Livros (consulta geral e detalhes)
+    // Livros (consulta)
     Route::get('/livros', [LivroController::class, 'index'])->name('livros.index');
-    Route::get('/livros/{livro}', [LivroController::class, 'show'])
-        ->where('livro', '[0-9]+') // Evita conflito com "create"
-        ->name('livros.show');
+    Route::get('/livros/{livro}', [LivroController::class, 'show'])->where('livro', '[0-9]+')->name('livros.show');
 
-    // Autores e Editoras (visualização pública)
+    // =======================================================
+    //    AQUI ESTÁ A NOVA ROTA, NO SÍTIO CERTO
+    // =======================================================
+    Route::post('/livros/{livro}/solicitar-alerta', [LivroController::class, 'solicitarAlerta'])->name('livros.solicitar-alerta');
+
+
+    // Autores e Editoras (consulta)
     Route::get('/autores', [AutorController::class, 'index'])->name('autores.index');
     Route::get('/editoras', [EditoraController::class, 'index'])->name('editoras.index');
 
-    // Requisições do próprio usuário
+    // Requisições
     Route::get('/requisicoes', [RequisicaoController::class, 'index'])->name('requisicoes.index');
     Route::get('/requisicoes/create', [RequisicaoController::class, 'create'])->name('requisicoes.create');
     Route::post('/requisicoes', [RequisicaoController::class, 'store'])->name('requisicoes.store');
     Route::delete('/requisicoes/{requisicao}/cancelar', [RequisicaoController::class, 'cancelar'])->name('requisicoes.cancelar');
 
-    // =============================================
-    //   ROTAS DE REVIEW (movidas para fora de admin)
-    // =============================================
+    // Reviews (submissão pelo Cidadão)
     Route::get('/requisicoes/{requisicao}/review', [RequisicaoController::class, 'mostrarFormularioReview'])->name('reviews.create');
     Route::post('/requisicoes/{requisicao}/review', [RequisicaoController::class, 'guardarReview'])->name('reviews.store');
 
@@ -72,7 +73,7 @@ Route::middleware([
     */
     Route::middleware(['admin'])->group(function () {
 
-        // LIVROS (gestão completa, exceto index/show que já estão acima)
+        // Gestão de Livros
         Route::get('/livros/create', [LivroController::class, 'create'])->name('livros.create');
         Route::post('/livros', [LivroController::class, 'store'])->name('livros.store');
         Route::get('/livros/{livro}/edit', [LivroController::class, 'edit'])->name('livros.edit');
@@ -83,34 +84,26 @@ Route::middleware([
         Route::get('/livros/exportar/csv', [LivroController::class, 'exportar'])->name('livros.exportar');
         Route::get('/livros/importar', [LivroController::class, 'mostrarFormularioImportacao'])->name('livros.importar.form');
         Route::get('/livros/importar/pesquisar', [LivroController::class, 'pesquisarNaGoogleAPI'])->name('livros.importar.pesquisar');
-        Route::post('/livros/importar', [LivroController::class, 'importarLivro'])->name('livros.importar.store');
         Route::post('/livros/importar', [LivroController::class, 'guardarLivroImportado'])->name('livros.importar.store');
 
-        // AUTORES
-        Route::get('/autores/create', [AutorController::class, 'create'])->name('autores.create');
-        Route::post('/autores', [AutorController::class, 'store'])->name('autores.store');
-        Route::get('/autores/{autor}/edit', [AutorController::class, 'edit'])->name('autores.edit');
-        Route::put('/autores/{autor}', [AutorController::class, 'update'])->name('autores.update');
-        Route::delete('/autores/{autor}', [AutorController::class, 'destroy'])->name('autores.destroy');
+        // Gestão de Autores
+        Route::resource('autores', AutorController::class)->except(['index', 'show']);
 
-        // EDITORAS
-        Route::get('/editoras/create', [EditoraController::class, 'create'])->name('editoras.create');
-        Route::post('/editoras', [EditoraController::class, 'store'])->name('editoras.store');
-        Route::get('/editoras/{editora}/edit', [EditoraController::class, 'edit'])->name('editoras.edit');
-        Route::put('/editoras/{editora}', [EditoraController::class, 'update'])->name('editoras.update');
-        Route::delete('/editoras/{editora}', [EditoraController::class, 'destroy'])->name('editoras.destroy');
+        // Gestão de Editoras
+        Route::resource('editoras', EditoraController::class)->except(['index', 'show']);
 
-        // USUÁRIOS
+        // Gestão de Usuários
         Route::resource('users', UserController::class);
         Route::patch('/users/{user}/toggle-status', [UserController::class, 'toggleStatus'])->name('users.toggle-status');
 
-        // Ações administrativas em requisições
+        // Gestão de Requisições
         Route::patch('/requisicoes/{requisicao}/aprovar', [RequisicaoController::class, 'aprovar'])->name('requisicoes.aprovar');
-        // Gestão de Reviews (Admin)
-        Route::get('/reviews', [App\Http\Controllers\ReviewController::class, 'index'])->name('admin.reviews.index');
+        Route::patch('/requisicoes/{requisicao}/entregar', [RequisicaoController::class, 'entregar'])->name('requisicoes.entregar');
+
+        // Gestão de Reviews
+        Route::get('/reviews', [ReviewController::class, 'index'])->name('admin.reviews.index');
         Route::patch('/reviews/{review}/aprovar', [ReviewController::class, 'aprovar'])->name('admin.reviews.aprovar');
         Route::get('/reviews/{review}/recusar', [ReviewController::class, 'mostrarFormularioRecusa'])->name('admin.reviews.recusar.form');
         Route::patch('/reviews/{review}/recusar', [ReviewController::class, 'recusar'])->name('admin.reviews.recusar.submit');
-        Route::patch('/requisicoes/{requisicao}/entregar', [RequisicaoController::class, 'entregar'])->name('requisicoes.entregar');
     });
 });

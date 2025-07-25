@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Livro;
 use App\Models\Autor;
 use App\Models\Editora;
+use App\Models\AlertaDisponibilidade;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Pagination\Paginator;
@@ -529,5 +530,23 @@ class LivroController extends Controller
 
         // 8. Retorna com uma mensagem de sucesso
         return redirect()->route('livros.importar.form')->with('success', "O livro '{$novoLivro->nome}' foi importado com sucesso!");
+    }
+
+
+    public function solicitarAlerta(Request $request, Livro $livro)
+    {
+        // Regra de negócio: só pode pedir alerta se o livro estiver de facto esgotado.
+        if ($livro->quantidade > 0) {
+            return back()->with('error', 'Este livro já se encontra disponível para requisição.');
+        }
+
+        // Usamos o firstOrCreate para evitar que o mesmo usuário se inscreva várias vezes.
+        // A regra 'unique' na nossa migração também nos protege.
+        AlertaDisponibilidade::firstOrCreate([
+            'user_id' => auth()->id(),
+            'livro_id' => $livro->id,
+        ]);
+
+        return back()->with('success', 'Perfeito! Você será notificado por email assim que este livro estiver disponível.');
     }
 }

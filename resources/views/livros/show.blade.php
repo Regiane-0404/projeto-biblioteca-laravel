@@ -61,7 +61,54 @@
 
                             <p class="text-base-content/70 text-lg"><strong>ISBN:</strong> {{ $livro->isbn }}</p>
 
-                            <div class="space-y-6 mt-6">
+                            <!-- ============================================= -->
+                            <!--   NOVO BLOCO DE AÇÕES (REQUISITAR OU AVISAR)  -->
+                            <!-- ============================================= -->
+                            <div class="mt-6">
+                                @if ($livro->quantidade > 0)
+                                    {{-- Se houver estoque, mostramos o botão de Requisitar (se for cidadão) --}}
+                                    @if (auth()->check() && auth()->user()->role === 'cidadao')
+                                        <form method="POST" action="{{ route('requisicoes.store') }}">
+                                            @csrf
+                                            <input type="hidden" name="livros_ids[]" value="{{ $livro->id }}">
+                                            <button type="submit" class="btn btn-primary w-full">
+                                                ➕ Requisitar Agora ({{ $livro->quantidade }} disponíveis)
+                                            </button>
+                                        </form>
+                                    @endif
+                                @else
+                                    {{-- Se não houver estoque, mostramos o botão de Alerta --}}
+                                    @if (auth()->check())
+                                        @php
+                                            // Verificamos se o usuário atual já pediu um alerta para este livro
+                                            $jaPediuAlerta = \App\Models\AlertaDisponibilidade::where(
+                                                'user_id',
+                                                auth()->id(),
+                                            )
+                                                ->where('livro_id', $livro->id)
+                                                ->exists();
+                                        @endphp
+
+                                        @if ($jaPediuAlerta)
+                                            <div class="alert alert-success">
+                                                <span>👍 Já está na lista! Avisaremos quando estiver disponível.</span>
+                                            </div>
+                                        @else
+                                            <form method="POST"
+                                                action="{{ route('livros.solicitar-alerta', $livro) }}">
+                                                @csrf
+                                                <button type="submit" class="btn btn-secondary w-full">
+                                                    🔔 Avise-me quando disponível
+                                                </button>
+                                            </form>
+                                        @endif
+                                    @endif
+                                @endif
+                            </div>
+
+                            <div class="divider"></div>
+
+                            <div class="space-y-6 mt-2">
                                 <div>
                                     <h3 class="font-semibold text-base-content text-lg mb-2">🏢 Editora</h3>
                                     <p class="text-base-content/80 text-lg">
@@ -71,7 +118,8 @@
                                     <h3 class="font-semibold text-base-content text-lg mb-2">✍️
                                         {{ Str::plural('Autor', $livro->autores->count()) }}</h3>
                                     <p class="text-base-content/80 text-lg">
-                                        {{ $livro->autores->pluck('nome')->join(', ') ?: 'Nenhum autor associado' }}</p>
+                                        {{ $livro->autores->pluck('nome')->join(', ') ?: 'Nenhum autor associado' }}
+                                    </p>
                                 </div>
                                 @if ($livro->bibliografia)
                                     <div>
@@ -104,7 +152,8 @@
                             <tbody>
                                 @forelse($livro->requisicoes as $requisicao)
                                     <tr>
-                                        <td class="font-semibold">{{ $requisicao->user->name ?? 'Usuário Removido' }}</td>
+                                        <td class="font-semibold">{{ $requisicao->user->name ?? 'Usuário Removido' }}
+                                        </td>
                                         <td>{{ optional($requisicao->data_inicio)->format('d/m/Y') }}</td>
                                         <td>{{ optional($requisicao->data_fim_prevista)->format('d/m/Y') }}</td>
                                         <td>
@@ -193,25 +242,34 @@
                     <h3 class="text-2xl font-bold mb-4">Você também pode gostar de...</h3>
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                         @foreach ($livrosRelacionados as $relacionado)
-                            <a href="{{ route('livros.show', $relacionado) }}" class="card bg-base-100 shadow-xl transition-transform hover:scale-105">
+                            <a href="{{ route('livros.show', $relacionado) }}"
+                                class="card bg-base-100 shadow-xl transition-transform hover:scale-105">
                                 <figure class="px-4 pt-4 h-56">
                                     @php
                                         $imageUrl = null;
                                         if ($relacionado->imagem_capa) {
-                                            if (str_starts_with($relacionado->imagem_capa, 'http')) $imageUrl = $relacionado->imagem_capa;
-                                            elseif (Storage::disk('public')->exists($relacionado->imagem_capa)) $imageUrl = asset('storage/' . $relacionado->imagem_capa);
+                                            if (str_starts_with($relacionado->imagem_capa, 'http')) {
+                                                $imageUrl = $relacionado->imagem_capa;
+                                            } elseif (Storage::disk('public')->exists($relacionado->imagem_capa)) {
+                                                $imageUrl = asset('storage/' . $relacionado->imagem_capa);
+                                            }
                                         }
                                     @endphp
-                                    @if($imageUrl)
-                                        <img src="{{ $imageUrl }}" alt="Capa de {{ $relacionado->nome_visivel }}" class="rounded-lg object-contain h-full w-full" />
+                                    @if ($imageUrl)
+                                        <img src="{{ $imageUrl }}" alt="Capa de {{ $relacionado->nome_visivel }}"
+                                            class="rounded-lg object-contain h-full w-full" />
                                     @else
-                                        <div class="w-full h-full bg-base-200 rounded-lg flex items-center justify-center"><span class="text-4xl opacity-30">📚</span></div>
+                                        <div
+                                            class="w-full h-full bg-base-200 rounded-lg flex items-center justify-center">
+                                            <span class="text-4xl opacity-30">📚</span>
+                                        </div>
                                     @endif
                                 </figure>
                                 <div class="card-body p-4 items-center text-center">
-                                    <h2 class="card-title text-sm h-10">{{ Str::limit($relacionado->nome_visivel, 35) }}</h2>
+                                    <h2 class="card-title text-sm h-10">
+                                        {{ Str::limit($relacionado->nome_visivel, 35) }}</h2>
                                     <div class="card-actions">
-                                        @if($relacionado->quantidade > 0)
+                                        @if ($relacionado->quantidade > 0)
                                             <div class="badge badge-success badge-outline">Disponível</div>
                                         @else
                                             <div class="badge badge-error badge-outline">Esgotado</div>
