@@ -4,29 +4,28 @@ namespace App\Http\Controllers;
 
 use App\Models\Review;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\ReviewAprovada;
+use App\Mail\ReviewRecusada;
 
 class ReviewController extends Controller
 {
     /**
-     * Mostra a lista de reviews pendentes para moderação do Admin.
+     * Mostra a lista de reviews pendentes.
      */
     public function index()
     {
-        // 1. Buscamos todas as reviews que têm o status 'pendente'.
-        //    Carregamos as relações 'user' e 'livro' para mostrar os seus nomes.
         $reviewsPendentes = Review::where('status', 'pendente')
             ->with(['user', 'livro'])
-            ->latest() // Mostra as mais recentes primeiro
+            ->latest()
             ->paginate(10);
 
-        // 2. Forçamos a desencriptação dos nomes dos livros.
         $reviewsPendentes->getCollection()->each(function ($review) {
             if ($review->livro) {
                 $review->livro->nome_visivel = $review->livro->nome;
             }
         });
 
-        // 3. Retornamos a view do painel de moderação.
         return view('admin.reviews.index', compact('reviewsPendentes'));
     }
 
@@ -37,14 +36,16 @@ class ReviewController extends Controller
     {
         $review->update(['status' => 'aprovado']);
 
-        // Aqui enviaremos o email para o cidadão
-        // Mail::to($review->user->email)->send(new SuaReviewAprovada($review));
+        // =============================================
+        //  CHAMADA CORRIGIDA (SEM O \App\Mail\)
+        // =============================================
+        Mail::to($review->user->email)->queue(new ReviewAprovada($review));
 
         return back()->with('success', 'A avaliação foi aprovada e está agora pública.');
     }
 
     /**
-     * Mostra o formulário para o Admin justificar a recusa.
+     * Mostra o formulário para a recusa.
      */
     public function mostrarFormularioRecusa(Review $review)
     {
@@ -65,8 +66,10 @@ class ReviewController extends Controller
             'justificacao_recusa' => $validated['justificacao_recusa'],
         ]);
 
-        // Aqui enviaremos o email para o cidadão com a justificação
-        // Mail::to($review->user->email)->send(new SuaReviewRecusada($review));
+        // =============================================
+        //  CHAMADA CORRIGIDA (SEM O \App\Mail\)
+        // =============================================
+        Mail::to($review->user->email)->queue(new ReviewRecusada($review));
 
         return redirect()->route('admin.reviews.index')
             ->with('success', 'A avaliação foi recusada com sucesso.');

@@ -210,16 +210,24 @@ class LivroController extends Controller
 
     public function show(Livro $livro)
     {
-        // A linha abaixo carrega as relações de forma um pouco diferente,
-        // o que pode ser mais robusto em certos cenários.
-        // Primeiro carrega o básico, depois as requisições.
         $livro->load('editora', 'autores');
 
-        $livro->load(['requisicoes' => function ($query) {
-            $query->with('user')->orderBy('created_at', 'desc');
-        }]);
+        $livro->load([
+            'requisicoes' => function ($query) {
+                $query->with('user')->orderBy('created_at', 'desc');
+            },
 
-        // Agora, passamos para a view.
+            // =======================================================
+            //   ADICIONE ESTE NOVO BLOCO PARA CARREGAR AS REVIEWS
+            // =======================================================
+            'reviews' => function ($query) {
+                // Buscamos apenas as que estão com status 'aprovado'
+                $query->where('status', 'aprovado')
+                    ->with('user') // Também trazemos os dados do usuário que escreveu
+                    ->latest();    // Mostramos as mais recentes primeiro
+            }
+        ]);
+
         return view('livros.show', compact('livro'));
     }
 
