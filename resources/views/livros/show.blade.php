@@ -104,8 +104,7 @@
                             <tbody>
                                 @forelse($livro->requisicoes as $requisicao)
                                     <tr>
-                                        <td class="font-semibold">{{ $requisicao->user->name ?? 'Usuário Removido' }}
-                                        </td>
+                                        <td class="font-semibold">{{ $requisicao->user->name ?? 'Usuário Removido' }}</td>
                                         <td>{{ optional($requisicao->data_inicio)->format('d/m/Y') }}</td>
                                         <td>{{ optional($requisicao->data_fim_prevista)->format('d/m/Y') }}</td>
                                         <td>
@@ -183,6 +182,47 @@
                     @endforelse
                 </div>
             </div>
+
+            {{-- ... fim do card das Opiniões dos Leitores ... --}}
+
+            <!-- ============================================= -->
+            <!--   NOVA SECÇÃO DE LIVROS RELACIONADOS          -->
+            <!-- ============================================= -->
+            @if ($livrosRelacionados->isNotEmpty())
+                <div class="mt-8">
+                    <h3 class="text-2xl font-bold mb-4">Você também pode gostar de...</h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                        @foreach ($livrosRelacionados as $relacionado)
+                            <a href="{{ route('livros.show', $relacionado) }}" class="card bg-base-100 shadow-xl transition-transform hover:scale-105">
+                                <figure class="px-4 pt-4 h-56">
+                                    @php
+                                        $imageUrl = null;
+                                        if ($relacionado->imagem_capa) {
+                                            if (str_starts_with($relacionado->imagem_capa, 'http')) $imageUrl = $relacionado->imagem_capa;
+                                            elseif (Storage::disk('public')->exists($relacionado->imagem_capa)) $imageUrl = asset('storage/' . $relacionado->imagem_capa);
+                                        }
+                                    @endphp
+                                    @if($imageUrl)
+                                        <img src="{{ $imageUrl }}" alt="Capa de {{ $relacionado->nome_visivel }}" class="rounded-lg object-contain h-full w-full" />
+                                    @else
+                                        <div class="w-full h-full bg-base-200 rounded-lg flex items-center justify-center"><span class="text-4xl opacity-30">📚</span></div>
+                                    @endif
+                                </figure>
+                                <div class="card-body p-4 items-center text-center">
+                                    <h2 class="card-title text-sm h-10">{{ Str::limit($relacionado->nome_visivel, 35) }}</h2>
+                                    <div class="card-actions">
+                                        @if($relacionado->quantidade > 0)
+                                            <div class="badge badge-success badge-outline">Disponível</div>
+                                        @else
+                                            <div class="badge badge-error badge-outline">Esgotado</div>
+                                        @endif
+                                    </div>
+                                </div>
+                            </a>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
 
             <!-- Botão Voltar -->
             <div class="mt-8 flex justify-center">

@@ -99,7 +99,8 @@
                             <div class="card-actions justify-end mt-2">
                                 @if ($livro->quantidade > 0)
                                     <div class="badge badge-success badge-outline">Disponível
-                                        ({{ $livro->quantidade }})</div>
+                                        ({{ $livro->quantidade }})
+                                    </div>
                                 @else
                                     <div class="badge badge-error badge-outline">Esgotado</div>
                                 @endif
@@ -121,7 +122,8 @@
                                     @else
                                         <div
                                             class="w-full h-full bg-base-200 rounded-lg flex items-center justify-center">
-                                            <span class="text-6xl opacity-30">📚</span></div>
+                                            <span class="text-6xl opacity-30">📚</span>
+                                        </div>
                                     @endif
                                 </div>
                                 <!-- Coluna das Informações -->

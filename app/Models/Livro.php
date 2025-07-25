@@ -83,4 +83,57 @@ class Livro extends Model
     {
         return $this->hasMany(Review::class);
     }
+
+    /**
+     * Encontra livros relacionados com base em palavras-chave na bibliografia.
+     *
+     * @param int $limite O número de livros relacionados a retornar.
+     * @return \Illuminate\Database\Eloquent\Collection
+     */
+    public function getLivrosRelacionados($limite = 4)
+    {
+        // Se não há bibliografia, não fazemos nada.
+        if (empty($this->bibliografia)) {
+            return collect();
+        }
+
+        // 1. Extrai as palavras-chave deste livro (desencriptado).
+        $palavrasChave = collect(preg_split('/[\s,\.;\(\)]+/', $this->bibliografia))
+            ->map(fn($palavra) => trim(strtolower($palavra)))
+            ->filter(fn($palavra) => strlen($palavra) > 5)
+            ->unique()
+            ->take(10);
+
+        if ($palavrasChave->isEmpty()) {
+            return collect();
+        }
+
+        // 2. VAI BUSCAR TODOS OS OUTROS LIVROS À BASE DE DADOS.
+        //    É menos eficiente, mas à prova de falhas com a encriptação.
+        $outrosLivros = Livro::where('id', '!=', $this->id)->where('ativo', true)->get();
+
+        // 3. AGORA, FILTRAMOS EM PHP (onde os dados já estão desencriptados).
+        $livrosComPontuacao = $outrosLivros->map(function ($livro) use ($palavrasChave) {
+            $pontos = 0;
+            // Se o outro livro também não tem bibliografia, tem 0 pontos.
+            if (empty($livro->bibliografia)) {
+                $livro->pontuacao_similaridade = 0;
+                return $livro;
+            }
+
+            // Compara as palavras
+            foreach ($palavrasChave as $palavra) {
+                if (stripos($livro->bibliografia, $palavra) !== false) {
+                    $pontos++;
+                }
+            }
+            $livro->pontuacao_similaridade = $pontos;
+            return $livro;
+        });
+
+        // 4. Ordena pelos que tiveram mais correspondências e retorna o limite.
+        return $livrosComPontuacao->where('pontuacao_similaridade', '>', 0) // Só queremos os que têm pelo menos 1 correspondência
+            ->sortByDesc('pontuacao_similaridade')
+            ->take($limite);
+    }
 }

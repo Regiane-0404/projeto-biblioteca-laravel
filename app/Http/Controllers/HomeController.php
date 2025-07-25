@@ -3,49 +3,55 @@
 namespace App\Http\Controllers;
 
 use App\Models\Livro;
-use App\Models\Editora; // Adicionar este import
+use App\Models\Editora;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Pagination\Paginator;
 
 class HomeController extends Controller
 {
-    /**
-     * Mostra a página inicial pública com o catálogo de livros.
-     */
     public function index(Request $request)
     {
         $query = Livro::where('ativo', true)->with(['editora', 'autores']);
-
-        // APLICA O NOVO FILTRO DE EDITORA
         if ($request->filled('editora')) {
             $query->where('editora_id', $request->editora);
         }
 
-        // Aplica o filtro de pesquisa, se existir
+        $todosLivros = $query->get();
+        $todosLivros->each(function ($livro) {
+            $livro->nome_visivel = $livro->nome;
+            $livro->autores->each(function ($autor) {
+                $autor->nome_visivel = $autor->nome;
+            });
+        });
+
+        $livrosFiltrados = $todosLivros;
         if ($request->filled('search')) {
             $termo = $request->search;
-            $todosLivros = $query->get();
             $livrosFiltrados = $todosLivros->filter(function ($livro) use ($termo) {
-                if (stripos($livro->nome, $termo) !== false) return true;
+                if (stripos($livro->nome_visivel, $termo) !== false) return true;
                 foreach ($livro->autores as $autor) {
-                    if (stripos($autor->nome, $termo) !== false) return true;
+                    if (stripos($autor->nome_visivel, $termo) !== false) return true;
                 }
                 return false;
             });
-            $livros = new \Illuminate\Pagination\LengthAwarePaginator(
-                $livrosFiltrados->forPage(\Illuminate\Pagination\Paginator::resolveCurrentPage(), 12),
-                $livrosFiltrados->count(),
-                12,
-                \Illuminate\Pagination\Paginator::resolveCurrentPage(),
-                ['path' => $request->url(), 'query' => $request->query()]
-            );
-        } else {
-            $livros = $query->latest()->paginate(12);
         }
 
-        // BUSCA A LISTA DE EDITORAS PARA O DROPDOWN
-        $editoras = Editora::orderBy('nome')->get();
+        $page = Paginator::resolveCurrentPage('page');
+        $perPage = 12;
+        $livros = new LengthAwarePaginator(
+            $livrosFiltrados->forPage($page, $perPage),
+            $livrosFiltrados->count(),
+            $perPage,
+            $page,
+            ['path' => $request->url(), 'query' => $request->query()]
+        );
 
-        // ENVIA TODAS AS VARIÁVEIS NECESSÁRIAS PARA A VIEW
+        $editoras = Editora::orderBy('nome')->get();
+        $editoras->each(function ($editora) {
+            $editora->nome_visivel = $editora->nome;
+        });
+
         return view('home', compact('livros', 'editoras'));
     }
 }

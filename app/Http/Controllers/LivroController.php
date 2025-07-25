@@ -228,7 +228,19 @@ class LivroController extends Controller
             }
         ]);
 
-        return view('livros.show', compact('livro'));
+        // =======================================================
+        //    A NOVA LÓGICA PARA BUSCAR LIVROS RELACIONADOS
+        // =======================================================
+        // 2. Chamamos o novo método que criámos no modelo.
+        $livrosRelacionados = $livro->getLivrosRelacionados(4); // Queremos 4 sugestões
+
+        // 3. Forçamos a desencriptação dos nomes para a view.
+        $livrosRelacionados->each(function ($relacionado) {
+            $relacionado->nome_visivel = $relacionado->nome;
+        });
+
+        // 4. Enviamos tanto o livro principal como a lista de relacionados para a view.
+        return view('livros.show', compact('livro', 'livrosRelacionados'));
     }
 
     public function edit(Livro $livro)
