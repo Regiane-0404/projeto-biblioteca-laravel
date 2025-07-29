@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 [x-cloak] {
-    display: none;
+  display: none;
 }
 
 /* Adicione este código no final do seu resources/css/app.css */
@@ -15,16 +15,16 @@
   em vez de ficar esmaecido.
 */
 .checkbox:disabled:checked {
-    background-color: hsl(var(--p));
-    /* Cor primária */
-    opacity: 1;
-    border-color: hsl(var(--p));
-    /* Cor da borda */
+  background-color: hsl(var(--p));
+  /* Cor primária */
+  opacity: 1;
+  border-color: hsl(var(--p));
+  /* Cor da borda */
 }
 
 .checkbox:disabled:checked:hover {
-    background-color: hsl(var(--p));
-    border-color: hsl(var(--p));
+  background-color: hsl(var(--p));
+  border-color: hsl(var(--p));
 }
 
 /* ================================================================== */
@@ -36,10 +36,10 @@
   QUANDO o cursor do rato passa por cima do grupo de estrelas (:hover).
 */
 .rating:hover input[type="radio"].mask-star-2 {
-    /* Define a cor de fundo laranja com opacidade TOTAL */
-    background-color: #fb923c;
-    /* Cor laranja do Tailwind */
-    opacity: 1;
+  /* Define a cor de fundo laranja com opacidade TOTAL */
+  background-color: #fb923c;
+  /* Cor laranja do Tailwind */
+  opacity: 1;
 }
 
 /*
@@ -48,6 +48,7 @@
 */
 .rating>input[type="radio"]:checked,
 .rating>input[type="radio"]:checked~input[type="radio"] {
-    background-color: #fb923c !important;
-    opacity: 1 !important;
+  background-color: #fb923c !important;
+  opacity: 1 !important;
 }
+

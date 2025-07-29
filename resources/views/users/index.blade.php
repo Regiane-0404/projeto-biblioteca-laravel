@@ -19,7 +19,7 @@
                 <div class="card-body">
                     <div class="flex justify-between items-center mb-4">
                         <h3 class="card-title">Lista de Usuários</h3>
-                        {{-- O BOTÃO "+ NOVO UTILIZADOR" FOI REMOVIDO DESTA ÁREA --}}
+                        {{-- O BOTÃO "+ NOVO UTILIZADOR" FOI REMOVIDO DESTA ÁREA, pois a criação é feita pelo menu --}}
                     </div>
 
                     <!-- Formulário de Pesquisa e Filtros -->
@@ -51,8 +51,10 @@
                         </a>
                     </div>
 
-                    <!-- Tabela de Usuários -->
-                    <div class="overflow-x-auto">
+                    <!-- ============================================= -->
+                    <!-- == INÍCIO DA CORREÇÃO: overflow-visible      == -->
+                    <!-- ============================================= -->
+                    <div class="overflow-x-auto overflow-visible">
                         <table class="table w-full">
                             <thead>
                                 <tr>
@@ -65,7 +67,7 @@
                                     <th>Requisições</th>
                                     <th>Pontos 🏆</th>
                                     <th>Status</th>
-                                    <th>Ações</th>
+                                    <th class="text-right">Ações</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -89,44 +91,37 @@
                                                 <span class="badge badge-warning">Inativo</span>
                                             @endif
                                         </td>
-                                        <td>
-                                            <div class="flex items-center gap-2">
-
-                                                @if (request('filtro') === 'sem_atividade')
+                                        <td class="text-right">
+                                            <!-- ============================================= -->
+                                            <!-- == DROPDOWN SIMPLIFICADO E CORRIGIDO         == -->
+                                            <!-- ============================================= -->
+                                            <div class="dropdown dropdown-end">
+                                                <div tabindex="0" role="button" class="btn btn-ghost btn-sm">...</div>
+                                                <ul tabindex="0" class="dropdown-content menu p-2 shadow-lg bg-base-100 rounded-box w-52 z-[1]">
+                                                    <li><a href="{{ route('users.show', $user) }}">👁️ Ver Detalhes</a></li>
+                                                    <li><a href="{{ route('users.edit', $user) }}">✏️ Editar</a></li>
+                                                    <div class="divider my-1"></div>
                                                     @if ($user->id !== auth()->id())
-                                                        <form method="POST"
-                                                            action="{{ route('users.destroy', $user) }}"
-                                                            onsubmit="return confirm('Tem a certeza que deseja EXCLUIR este usuário permanentemente? Esta ação não pode ser desfeita.');">
-                                                            @csrf
-                                                            @method('DELETE')
-                                                            <button type="submit" class="btn btn-sm btn-error"
-                                                                title="Excluir Usuário">🗑️ Excluir</button>
-                                                        </form>
+                                                        <li>
+                                                            <form class="w-full" method="POST" action="{{ route('users.toggle-status', $user) }}" onsubmit="return confirm('Tem a certeza?')">
+                                                                @csrf @method('PATCH')
+                                                                <button type="submit" class="w-full text-left p-2 rounded-lg hover:bg-base-200">
+                                                                    {{ $user->ativo ? '⚠️ Inativar' : '✅ Ativar' }}
+                                                                </button>
+                                                            </form>
+                                                        </li>
                                                     @endif
-                                                @else
-                                                    <a href="{{ route('users.show', $user) }}"
-                                                        class="btn btn-sm btn-ghost" title="Ver Detalhes">👁️</a>
-                                                    <a href="{{ route('users.edit', $user) }}"
-                                                        class="btn btn-sm btn-ghost" title="Editar">✏️</a>
-
-                                                    @if ($user->id !== auth()->id())
-                                                        <form method="POST"
-                                                            action="{{ route('users.toggle-status', $user) }}"
-                                                            onsubmit="return confirm('Tem a certeza que deseja {{ $user->ativo ? 'inativar' : 'ativar' }} este usuário?');">
-                                                            @csrf @method('PATCH')
-                                                            @if ($user->ativo)
-                                                                <button type="submit"
-                                                                    class="btn btn-sm btn-ghost text-warning"
-                                                                    title="Inativar">⚠️</button>
-                                                            @else
-                                                                <button type="submit"
-                                                                    class="btn btn-sm btn-ghost text-success"
-                                                                    title="Ativar">✅</button>
-                                                            @endif
-                                                        </form>
+                                                    @if (!$user->requisicoes()->exists() && $user->id !== auth()->id())
+                                                        <li>
+                                                            <form class="w-full" method="POST" action="{{ route('users.destroy', $user) }}" onsubmit="return confirm('AÇÃO IRREVERSÍVEL! Tem a certeza?')">
+                                                                @csrf @method('DELETE')
+                                                                <button type="submit" class="w-full text-left p-2 rounded-lg hover:bg-error hover:text-error-content">
+                                                                    ❌ Excluir
+                                                                </button>
+                                                            </form>
+                                                        </li>
                                                     @endif
-                                                @endif
-
+                                                </ul>
                                             </div>
                                         </td>
                                     </tr>
@@ -140,6 +135,9 @@
                             </tbody>
                         </table>
                     </div>
+                    <!-- ============================================= -->
+                    <!-- == FIM DA CORREÇÃO                         == -->
+                    <!-- ============================================= -->
 
                     <div class="mt-6">
                         {{ $users->links() }}

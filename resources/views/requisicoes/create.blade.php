@@ -114,9 +114,9 @@
                         </div>
 
                         <div class="card-actions justify-end">
-                            <a href="{{ route('requisicoes.index') }}" class="btn btn-outline">
+                            <button type="button" class="btn btn-outline" onclick="window.history.back()">
                                 Cancelar
-                            </a>
+                            </button>
                             <button type="submit" class="btn btn-primary" id="btnSubmit" disabled>
                                 ➕ Criar Requisição
                             </button>

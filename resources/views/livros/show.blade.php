@@ -188,53 +188,7 @@
                 </div>
             </div>
 
-            <!-- Opiniões dos Leitores -->
-            <div class="card bg-base-100 shadow-xl mt-8">
-                <div class="card-body">
-                    <h3 class="card-title text-2xl mb-4">⭐ Opiniões dos Leitores</h3>
 
-                    @forelse ($livro->reviews as $review)
-                        <div class="chat chat-start">
-                            <div class="chat-image avatar">
-                                <div class="w-10 rounded-full">
-                                    <img alt="Avatar de {{ $review->user->name }}"
-                                        src="{{ $review->user->profile_photo_url }}" />
-                                </div>
-                            </div>
-                            <div class="chat-header">
-                                {{ $review->user->name }}
-                                <time class="text-xs opacity-50 ml-2">{{ $review->created_at->format('d/m/Y') }}</time>
-                            </div>
-                            <div class="chat-bubble">
-                                @if ($review->comentario)
-                                    {{ $review->comentario }}
-                                @else
-                                    <span class="italic">Este usuário não deixou um comentário.</span>
-                                @endif
-                            </div>
-
-                            <div class="chat-footer">
-                                <div class="rating rating-sm">
-                                    <input type="radio" name="rating-{{ $review->id }}" class="rating-hidden"
-                                        checked disabled />
-                                    @for ($i = 1; $i <= 5; $i++)
-                                        <input type="radio" name="rating-{{ $review->id }}"
-                                            class="mask mask-star-2 bg-orange-400"
-                                            @if ($i == $review->classificacao) checked @endif disabled />
-                                    @endfor
-                                </div>
-                            </div>
-                        </div>
-                        @if (!$loop->last)
-                            <div class="divider"></div>
-                        @endif
-                    @empty
-                        <div class="text-center py-6 text-gray-500">
-                            <p>Este livro ainda não tem nenhuma avaliação pública. Seja o primeiro a opinar!</p>
-                        </div>
-                    @endforelse
-                </div>
-            </div>
 
             <!-- Livros Relacionados -->
             @if ($livrosRelacionados->isNotEmpty())

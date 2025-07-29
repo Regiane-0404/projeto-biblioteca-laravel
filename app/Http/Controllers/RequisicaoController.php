@@ -42,19 +42,28 @@ class RequisicaoController extends Controller
             ];
 
             $query = Requisicao::query();
+            $viewData['active_tab'] = $request->has('tab') || $request->hasAny(['data_de', 'data_ate', 'status']) ? 'lista' : 'visao_geral';
 
-            if ($request->hasAny(['data_de', 'data_ate', 'status'])) {
-                $viewData['active_tab'] = 'lista';
-                if ($request->filled('status')) $query->where('status', $request->status);
-                if ($request->filled('data_de')) $query->whereDate('created_at', '>=', $request->data_de);
-                if ($request->filled('data_ate')) $query->whereDate('created_at', '<=', $request->data_ate);
+            if ($viewData['active_tab'] === 'lista') {
+                if ($request->filled('status')) {
+                    $query->where('status', $request->status);
+                }
 
-                $viewData['requisicoes'] = $query->with(['user', 'livro'])->latest()->paginate(7)->withQueryString();
-            } else {
-                $viewData['active_tab'] = $request->has('tab') ? 'lista' : 'visao_geral';
+                if ($request->filled('data_de') || $request->filled('data_ate')) {
+                    if ($request->filled('data_de')) {
+                        $query->whereDate('created_at', '>=', $request->data_de);
+                    }
+                    if ($request->filled('data_ate')) {
+                        $query->whereDate('created_at', '<=', $request->data_ate);
+                    }
 
-                if ($viewData['active_tab'] === 'lista') {
                     $viewData['requisicoes'] = $query->with(['user', 'livro'])->latest()->paginate(7)->withQueryString();
+                } else {
+                    $startOfWeek = Carbon::now()->startOfWeek();
+                    $endOfWeek = Carbon::now()->endOfWeek();
+                    $query->whereBetween('created_at', [$startOfWeek, $endOfWeek]);
+
+                    $viewData['requisicoes'] = $query->with(['user', 'livro'])->latest()->get();
                 }
             }
         } else {
@@ -74,7 +83,6 @@ class RequisicaoController extends Controller
         return view('requisicoes.index', $viewData);
     }
 
-    // Método atualizado com novo parâmetro $livro_id
     public function create(Request $request, $livro_id = null)
     {
         $search = $request->get('search', '');
@@ -176,9 +184,7 @@ class RequisicaoController extends Controller
             $livroDevolvido->increment('quantidade');
 
             if ($quantidadeAntiga === 0) {
-                $alertas = AlertaDisponibilidade::where('livro_id', $livroDevolvido->id)
-                    ->with('user')
-                    ->get();
+                $alertas = AlertaDisponibilidade::where('livro_id', $livroDevolvido->id)->with('user')->get();
 
                 foreach ($alertas as $alerta) {
                     if ($alerta->user) {

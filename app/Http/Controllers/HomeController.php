@@ -7,6 +7,8 @@ use App\Models\Editora;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Pagination\Paginator;
+use App\Models\Review;
+use App\Models\User;
 
 class HomeController extends Controller
 {
@@ -52,6 +54,12 @@ class HomeController extends Controller
             $editora->nome_visivel = $editora->nome;
         });
 
-        return view('home', compact('livros', 'editoras'));
+
+        $reviewsRecentes = Review::where('status', 'aprovado') // Apenas as aprovadas
+            ->with(['user', 'livro'])                           // Carrega os dados do user e do livro
+            ->latest()                                          // Ordena pelas mais recentes
+            ->take(3)                                           // Pega no máximo 3
+            ->get();
+        return view('home', compact('livros', 'editoras', 'reviewsRecentes'));
     }
 }

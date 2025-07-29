@@ -2,7 +2,7 @@
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 
 <head>
-    <meta charset="utf-8">
+    <meta charset="utf-t">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{{ config('app.name', 'Laravel') }} - Bem-vindo</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -39,7 +39,7 @@
     <main class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
 
-            <!-- Secção de Boas-vindas e Pesquisa (VERSÃO CORRIGIDA) -->
+            <!-- Secção de Boas-vindas e Pesquisa -->
             <div class="bg-base-100 p-6 rounded-lg shadow-lg mb-8">
                 <h1 class="text-3xl font-bold mb-4 text-center">Bem-vindo ao nosso Acervo!</h1>
                 <form method="GET" action="{{ route('home') }}"
@@ -70,7 +70,6 @@
             <!-- Grelha de Livros com Modais -->
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                 @forelse ($livros as $livro)
-                    <!-- O Card do Livro agora abre o modal com onclick() -->
                     <div class="card bg-base-100 shadow-xl transition-transform hover:scale-105 cursor-pointer"
                         onclick="modal_livro_{{ $livro->id }}.showModal()">
                         <figure class="px-4 pt-4 h-64">
@@ -108,13 +107,9 @@
                         </div>
                     </div>
 
-                    <!-- ============================================= -->
-                    <!--     O MODAL ESCONDIDO PARA CADA LIVRO         -->
-                    <!-- ============================================= -->
                     <dialog id="modal_livro_{{ $livro->id }}" class="modal">
                         <div class="modal-box w-11/12 max-w-3xl">
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                <!-- Coluna da Capa -->
                                 <div class="md:col-span-1">
                                     @if ($imageUrl)
                                         <img src="{{ $imageUrl }}" alt="Capa de {{ $livro->nome }}"
@@ -126,7 +121,6 @@
                                         </div>
                                     @endif
                                 </div>
-                                <!-- Coluna das Informações -->
                                 <div class="md:col-span-2">
                                     <h3 class="font-bold text-2xl">{{ $livro->nome }}</h3>
                                     <p class="text-sm mt-1">
@@ -136,15 +130,11 @@
                                     </p>
                                     <p class="text-sm font-mono mt-2"><strong>ISBN:</strong>
                                         {{ $livro->isbn ?? 'Não disponível' }}</p>
-
                                     <div class="divider"></div>
-
                                     <h4 class="font-semibold mb-2">Sobre o Livro</h4>
                                     <p class="text-base-content/80 text-sm max-h-48 overflow-y-auto">
                                         {{ $livro->bibliografia ?: 'Sem sinopse disponível.' }}
                                     </p>
-
-                                    <!-- Call to Action -->
                                     <div class="alert alert-info mt-6">
                                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                                             class="stroke-current shrink-0 w-6 h-6">
@@ -164,7 +154,6 @@
                                     </div>
                                 </div>
                             </div>
-                            <!-- Botão para fechar -->
                             <div class="modal-action">
                                 <form method="dialog">
                                     <button class="btn">Fechar</button>
@@ -172,12 +161,85 @@
                             </div>
                         </div>
                     </dialog>
-
                 @empty
                     <p class="col-span-full text-center py-10 text-xl text-base-content/50">Nenhum livro encontrado com
                         os filtros atuais.</p>
                 @endforelse
             </div>
+
+            {{-- ======================================================= --}}
+            {{-- == CARROSSEL DE AVALIAÇÕES (NOVO DESIGN)             == --}}
+            {{-- ======================================================= --}}
+            @if ($reviewsRecentes->isNotEmpty())
+                <div class="mt-16">
+                    <h2 class="text-3xl font-bold mb-6 text-center">⭐ A Opinião dos Nossos Leitores</h2>
+                    <div class="carousel w-full bg-base-100 rounded-box shadow-lg">
+                        @foreach ($reviewsRecentes as $index => $review)
+                            <div id="slide{{ $review->id }}" class="carousel-item relative w-full">
+
+                                <div
+                                    class="flex flex-col md:flex-row items-center justify-center gap-6 md:gap-12 p-8 w-full">
+                                    <!-- Coluna da Capa do Livro -->
+                                    <div class="w-32 flex-shrink-0">
+                                        <a href="{{ route('livros.show', $review->livro) }}">
+                                            @php
+                                                $reviewImageUrl = null;
+                                                if ($review->livro && $review->livro->imagem_capa) {
+                                                    if (str_starts_with($review->livro->imagem_capa, 'http')) {
+                                                        $reviewImageUrl = $review->livro->imagem_capa;
+                                                    } elseif (
+                                                        Storage::disk('public')->exists($review->livro->imagem_capa)
+                                                    ) {
+                                                        $reviewImageUrl = asset(
+                                                            'storage/' . $review->livro->imagem_capa,
+                                                        );
+                                                    }
+                                                }
+                                            @endphp
+                                            @if ($reviewImageUrl)
+                                                <img src="{{ $reviewImageUrl }}" class="rounded-lg shadow-lg w-full"
+                                                    alt="Capa de {{ $review->livro->nome }}">
+                                            @else
+                                                <div
+                                                    class="w-full h-48 bg-base-200 rounded-lg flex items-center justify-center">
+                                                    <span class="text-4xl opacity-30">📚</span></div>
+                                            @endif
+                                        </a>
+                                    </div>
+
+                                    <!-- Coluna da Avaliação -->
+                                    <div class="text-center md:text-left max-w-md">
+                                        <div class="rating rating-sm">
+                                            @for ($i = 1; $i <= 5; $i++)
+                                                <input type="radio" name="rating-slide-{{ $review->id }}"
+                                                    class="mask mask-star-2 bg-orange-400"
+                                                    @if ($i == $review->classificacao) checked @endif disabled />
+                                            @endfor
+                                        </div>
+                                        <p class="text-lg italic mt-2">
+                                            "{{ Str::limit($review->comentario, 150) }}"
+                                        </p>
+                                        <div class="mt-4">
+                                            <div class="font-semibold">{{ $review->user->name ?? 'Leitor Anónimo' }}
+                                            </div>
+                                            {{-- AQUI VAI ENTRAR O GÉNERO QUANDO O CRIARMOS --}}
+                                            {{-- <div class="badge badge-ghost mt-1">Ficção Científica</div> --}}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div
+                                    class="absolute flex justify-between transform -translate-y-1/2 left-5 right-5 top-1/2">
+                                    <a href="#slide{{ $reviewsRecentes[($index - 1 + $reviewsRecentes->count()) % $reviewsRecentes->count()]->id }}"
+                                        class="btn btn-circle btn-ghost">❮</a>
+                                    <a href="#slide{{ $reviewsRecentes[($index + 1) % $reviewsRecentes->count()]->id }}"
+                                        class="btn btn-circle btn-ghost">❯</a>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
 
             <!-- Paginação -->
             <div class="mt-8">
