@@ -63,7 +63,9 @@
                                                         <input type="checkbox" name="livros_ids[]"
                                                             value="{{ $livro->id }}"
                                                             class="checkbox checkbox-primary mt-1"
-                                                            onchange="limitarSelecao(this)">
+                                                            onchange="limitarSelecao(this)"
+                                                            @if (isset($livro_id) && $livro->id == $livro_id) checked
+                                                                disabled @endif>
                                                         <div class="flex-1">
                                                             <h3 class="font-semibold text-sm">{{ $livro->nome }}</h3>
                                                             <p class="text-xs text-gray-600">{{ $livro->editora->nome }}
@@ -82,7 +84,6 @@
                                     @endforeach
                                 </div>
 
-                                <!-- Paginação -->
                                 <div class="mb-4">
                                     {{ $livrosDisponiveis->links() }}
                                 </div>
@@ -134,10 +135,8 @@
         const contador = document.getElementById('contador');
         const btnSubmit = document.getElementById('btnSubmit');
 
-        // Atualizar contador
         contador.innerHTML = `${selecionados.length}/3 livros selecionados`;
 
-        // Mostrar/esconder botão limpar
         if (selecionados.length > 0) {
             if (!document.getElementById('btnLimpar')) {
                 const limparBtn = document.createElement('button');
@@ -155,30 +154,32 @@
             }
         }
 
-        // Desabilitar outros checkboxes se já tem 3 selecionados
         if (selecionados.length >= 3) {
             checkboxes.forEach(cb => {
-                if (!cb.checked) {
+                if (!cb.checked && !cb.disabled) {
                     cb.disabled = true;
                 }
             });
             contador.classList.add('text-warning');
         } else {
             checkboxes.forEach(cb => {
-                cb.disabled = false;
+                if (!cb.hasAttribute('data-fixed')) {
+                    cb.disabled = false;
+                }
             });
             contador.classList.remove('text-warning');
         }
 
-        // Habilitar/desabilitar botão submit
         btnSubmit.disabled = selecionados.length === 0;
     }
 
     function limparSelecao() {
         const checkboxes = document.querySelectorAll('input[name="livros_ids[]"]');
         checkboxes.forEach(cb => {
-            cb.checked = false;
-            cb.disabled = false;
+            if (!cb.hasAttribute('disabled') || !cb.checked) {
+                cb.checked = false;
+                cb.disabled = false;
+            }
         });
 
         const contador = document.getElementById('contador');

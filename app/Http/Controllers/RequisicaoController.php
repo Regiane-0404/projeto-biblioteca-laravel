@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-// ... (todos os seus 'use' statements permanecem iguais)
 use App\Models\Requisicao;
 use App\Models\Livro;
 use App\Models\User;
@@ -21,8 +20,6 @@ use App\Models\Review;
 
 class RequisicaoController extends Controller
 {
-    // ... (os métodos index, create, store, aprovar permanecem exatamente iguais) ...
-
     public function index(Request $request)
     {
         $user = auth()->user();
@@ -52,13 +49,12 @@ class RequisicaoController extends Controller
                 if ($request->filled('data_de')) $query->whereDate('created_at', '>=', $request->data_de);
                 if ($request->filled('data_ate')) $query->whereDate('created_at', '<=', $request->data_ate);
 
-                $viewData['requisicoes'] = $query->with(['user', 'livro'])->latest()->paginate(10)->withQueryString();
+                $viewData['requisicoes'] = $query->with(['user', 'livro'])->latest()->paginate(7)->withQueryString();
             } else {
                 $viewData['active_tab'] = $request->has('tab') ? 'lista' : 'visao_geral';
 
                 if ($viewData['active_tab'] === 'lista') {
-                    $query->whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()]);
-                    $viewData['requisicoes'] = $query->with(['user', 'livro'])->latest()->get();
+                    $viewData['requisicoes'] = $query->with(['user', 'livro'])->latest()->paginate(7)->withQueryString();
                 }
             }
         } else {
@@ -78,7 +74,8 @@ class RequisicaoController extends Controller
         return view('requisicoes.index', $viewData);
     }
 
-    public function create(Request $request)
+    // Método atualizado com novo parâmetro $livro_id
+    public function create(Request $request, $livro_id = null)
     {
         $search = $request->get('search', '');
         $query = Livro::whereDoesntHave('requisicaoAtiva')->with(['editora', 'autores']);
@@ -104,7 +101,8 @@ class RequisicaoController extends Controller
         $perPage = 12;
         $livrosDisponiveis = new LengthAwarePaginator($livrosOrdenados->forPage($page, $perPage)->values(), $livrosOrdenados->count(), $perPage, $page, ['path' => Paginator::resolveCurrentPath()]);
         $livrosDisponiveis->withQueryString();
-        return view('requisicoes.create', compact('livrosDisponiveis', 'search'));
+
+        return view('requisicoes.create', compact('livrosDisponiveis', 'search', 'livro_id'));
     }
 
     public function store(Request $request)
@@ -155,14 +153,12 @@ class RequisicaoController extends Controller
 
     public function entregar(Request $request, Requisicao $requisicao)
     {
-        // 1. Validação dos dados do formulário
         $validated = $request->validate([
             'data_fim_real' => 'required|date',
             'observacoes' => 'nullable|string|max:500',
             'estado_devolucao' => 'required|string|in:intacto,marcas_uso,danificado,nao_devolvido'
         ]);
 
-        // 2. Cálculo e atualização dos dados da requisição
         $dataFimReal = Carbon::parse($validated['data_fim_real']);
         $diasAtraso = $dataFimReal->isAfter($requisicao->data_fim_prevista) ? $dataFimReal->diffInDays($requisicao->data_fim_prevista) : 0;
         $requisicao->update([
@@ -173,18 +169,12 @@ class RequisicaoController extends Controller
             'estado_devolucao' => $validated['estado_devolucao']
         ]);
 
-        // 3. Lógica para devolver o livro ao estoque (se aplicável) e disparar alertas
         if (in_array($validated['estado_devolucao'], ['intacto', 'marcas_uso', 'danificado'])) {
-
             $livroDevolvido = $requisicao->livro;
             $quantidadeAntiga = $livroDevolvido->quantidade;
 
-            
-
-            // Primeiro, incrementamos a quantidade
             $livroDevolvido->increment('quantidade');
 
-            // SÓ DEPOIS, verificamos se a quantidade ANTIGA era zero para disparar o alerta
             if ($quantidadeAntiga === 0) {
                 $alertas = AlertaDisponibilidade::where('livro_id', $livroDevolvido->id)
                     ->with('user')
@@ -194,13 +184,11 @@ class RequisicaoController extends Controller
                     if ($alerta->user) {
                         Mail::to($alerta->user->email)->queue(new LivroDisponivelAlerta($livroDevolvido, $alerta->user));
                     }
-                    // Apagamos o alerta depois de o usar
                     $alerta->delete();
                 }
             }
         }
 
-        // 4. Lógica de dedução de pontos do usuário (se aplicável)
         $user = User::find($requisicao->user_id);
         if ($user) {
             $pontos_a_deduzir = 0;
@@ -209,10 +197,8 @@ class RequisicaoController extends Controller
             if ($pontos_a_deduzir > 0) $user->decrement('pontos', $pontos_a_deduzir);
         }
 
-        // 5. Retornar com mensagem de sucesso
         return back()->with('success', 'Devolução registrada com sucesso!');
     }
-
 
     public function cancelar(Requisicao $requisicao)
     {

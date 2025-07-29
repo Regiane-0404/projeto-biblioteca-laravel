@@ -5,6 +5,7 @@
 [x-cloak] {
     display: none;
 }
+
 /* Adicione este código no final do seu resources/css/app.css */
 
 /*
@@ -14,12 +15,39 @@
   em vez de ficar esmaecido.
 */
 .checkbox:disabled:checked {
-    background-color: hsl(var(--p)); /* Cor primária */
+    background-color: hsl(var(--p));
+    /* Cor primária */
     opacity: 1;
-    border-color: hsl(var(--p)); /* Cor da borda */
+    border-color: hsl(var(--p));
+    /* Cor da borda */
 }
 
 .checkbox:disabled:checked:hover {
     background-color: hsl(var(--p));
     border-color: hsl(var(--p));
+}
+
+/* ================================================================== */
+/* == FORÇAR COR DAS ESTRELAS NO FORMULÁRIO DE CRIAÇÃO DE REVIEW   == */
+/* ================================================================== */
+
+/*
+  Isto seleciona os inputs de rádio DENTRO de um elemento com a classe "rating"
+  QUANDO o cursor do rato passa por cima do grupo de estrelas (:hover).
+*/
+.rating:hover input[type="radio"].mask-star-2 {
+    /* Define a cor de fundo laranja com opacidade TOTAL */
+    background-color: #fb923c;
+    /* Cor laranja do Tailwind */
+    opacity: 1;
+}
+
+/*
+  Isto seleciona a estrela que foi CLICADA (checked) e as suas irmãs
+  anteriores (~), forçando-as a permanecerem com cor e opacidade total.
+*/
+.rating>input[type="radio"]:checked,
+.rating>input[type="radio"]:checked~input[type="radio"] {
+    background-color: #fb923c !important;
+    opacity: 1 !important;
 }

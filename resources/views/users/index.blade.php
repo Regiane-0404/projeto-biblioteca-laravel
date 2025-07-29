@@ -19,7 +19,7 @@
                 <div class="card-body">
                     <div class="flex justify-between items-center mb-4">
                         <h3 class="card-title">Lista de Usuários</h3>
-                        <a href="{{ route('users.create') }}" class="btn btn-primary btn-sm">➕ Novo Usuário</a>
+                        {{-- O BOTÃO "+ NOVO UTILIZADOR" FOI REMOVIDO DESTA ÁREA --}}
                     </div>
 
                     <!-- Formulário de Pesquisa e Filtros -->
@@ -45,9 +45,6 @@
                         <a href="{{ route('users.index', array_merge(request()->query(), ['status' => 'inativo', 'filtro' => null])) }}"
                             class="btn btn-sm {{ request('status') == 'inativo' ? 'btn-active btn-warning' : 'btn-ghost' }}">Inativos</a>
 
-                        <!-- ============================================= -->
-                        <!--          NOVO BOTÃO DE FILTRO                 -->
-                        <!-- ============================================= -->
                         <a href="{{ route('users.index', array_merge(request()->query(), ['filtro' => 'sem_atividade', 'status' => null])) }}"
                             class="btn btn-sm {{ request('filtro') == 'sem_atividade' ? 'btn-active btn-accent' : 'btn-ghost' }}">
                             Sem Atividade
@@ -83,7 +80,7 @@
                                                 <span class="badge badge-info badge-outline">Cidadão</span>
                                             @endif
                                         </td>
-                                       <td class="text-center">{{ $user->requisicoes_count }}</td>
+                                        <td class="text-center">{{ $user->requisicoes_count }}</td>
                                         <td class="font-semibold text-center">{{ $user->pontos }}</td>
                                         <td>
                                             @if ($user->ativo)
@@ -96,7 +93,6 @@
                                             <div class="flex items-center gap-2">
 
                                                 @if (request('filtro') === 'sem_atividade')
-                                                    {{-- Ação na vista "Sem Atividade" --}}
                                                     @if ($user->id !== auth()->id())
                                                         <form method="POST"
                                                             action="{{ route('users.destroy', $user) }}"
@@ -108,7 +104,6 @@
                                                         </form>
                                                     @endif
                                                 @else
-                                                    {{-- Ações na vista normal --}}
                                                     <a href="{{ route('users.show', $user) }}"
                                                         class="btn btn-sm btn-ghost" title="Ver Detalhes">👁️</a>
                                                     <a href="{{ route('users.edit', $user) }}"

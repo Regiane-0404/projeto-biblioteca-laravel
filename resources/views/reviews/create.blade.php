@@ -42,12 +42,15 @@
                         @csrf
 
                         <!-- Classificação por Estrelas -->
-                        <div class="form-control mb-4">
-                            <label class="label"><span class="label-text font-semibold">Qual a sua
-                                    classificação?</span></label>
+                        {{-- SUBSTITUA O BLOCO ANTERIOR POR ESTE NOVO BLOCO --}}
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text">Qual a sua classificação?</span>
+                            </label>
                             <div class="rating rating-lg">
+                                {{-- A "magia" é usar o nome 'rating-2' que força o estilo correto --}}
                                 <input type="radio" name="classificacao" value="1"
-                                    class="mask mask-star-2 bg-orange-400" required />
+                                    class="mask mask-star-2 bg-orange-400" />
                                 <input type="radio" name="classificacao" value="2"
                                     class="mask mask-star-2 bg-orange-400" />
                                 <input type="radio" name="classificacao" value="3"
@@ -58,29 +61,35 @@
                                     class="mask mask-star-2 bg-orange-400" />
                             </div>
                             @error('classificacao')
-                                <p class="text-error text-sm mt-1">{{ $message }}</p>
+                                <div class="label">
+                                    <span class="label-text-alt text-error">{{ $message }}</span>
+                                </div>
                             @enderror
                         </div>
-
-                        <!-- Comentário -->
-                        <div class="form-control mb-6">
-                            <label class="label"><span class="label-text font-semibold">Seu comentário
-                                    (opcional)</span></label>
-                            <textarea name="comentario" class="textarea textarea-bordered h-32" placeholder="O que achou do livro?">{{ old('comentario') }}</textarea>
-                            @error('comentario')
-                                <p class="text-error text-sm mt-1">{{ $message }}</p>
-                            @enderror
-                        </div>
-
-                        <!-- Botões de Ação -->
-                        <div class="card-actions justify-end">
-                            <a href="{{ route('requisicoes.index') }}" class="btn btn-ghost">Cancelar</a>
-                            <button type="submit" class="btn btn-primary">Enviar Avaliação</button>
-                        </div>
-                    </form>
+                        @error('classificacao')
+                            <p class="text-error text-sm mt-1">{{ $message }}</p>
+                        @enderror
                 </div>
-            </div>
 
+                <!-- Comentário -->
+                <div class="form-control mb-6">
+                    <label class="label"><span class="label-text font-semibold">Seu comentário
+                            (opcional)</span></label>
+                    <textarea name="comentario" class="textarea textarea-bordered h-32" placeholder="O que achou do livro?">{{ old('comentario') }}</textarea>
+                    @error('comentario')
+                        <p class="text-error text-sm mt-1">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <!-- Botões de Ação -->
+                <div class="card-actions justify-end">
+                    <a href="{{ route('requisicoes.index') }}" class="btn btn-ghost">Cancelar</a>
+                    <button type="submit" class="btn btn-primary">Enviar Avaliação</button>
+                </div>
+                </form>
+            </div>
         </div>
+
+    </div>
     </div>
 </x-app-layout>

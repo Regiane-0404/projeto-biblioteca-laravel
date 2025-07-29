@@ -57,7 +57,7 @@ Route::middleware([
 
     // Requisições
     Route::get('/requisicoes', [RequisicaoController::class, 'index'])->name('requisicoes.index');
-    Route::get('/requisicoes/create', [RequisicaoController::class, 'create'])->name('requisicoes.create');
+    Route::get('/requisicoes/create/{livro_id?}', [RequisicaoController::class, 'create'])->name('requisicoes.create');
     Route::post('/requisicoes', [RequisicaoController::class, 'store'])->name('requisicoes.store');
     Route::delete('/requisicoes/{requisicao}/cancelar', [RequisicaoController::class, 'cancelar'])->name('requisicoes.cancelar');
 
@@ -93,9 +93,11 @@ Route::middleware([
         Route::resource('editoras', EditoraController::class)->except(['index', 'show']);
 
         // Gestão de Usuários
-        Route::resource('users', UserController::class);
+        Route::resource('users', UserController::class)->except(['create']);
         Route::patch('/users/{user}/toggle-status', [UserController::class, 'toggleStatus'])->name('users.toggle-status');
 
+
+       
         // Gestão de Requisições
         Route::patch('/requisicoes/{requisicao}/aprovar', [RequisicaoController::class, 'aprovar'])->name('requisicoes.aprovar');
         Route::patch('/requisicoes/{requisicao}/entregar', [RequisicaoController::class, 'entregar'])->name('requisicoes.entregar');

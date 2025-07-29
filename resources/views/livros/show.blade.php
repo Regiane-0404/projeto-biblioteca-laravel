@@ -61,26 +61,31 @@
 
                             <p class="text-base-content/70 text-lg"><strong>ISBN:</strong> {{ $livro->isbn }}</p>
 
-                            <!-- ============================================= -->
-                            <!--   NOVO BLOCO DE AÇÕES (REQUISITAR OU AVISAR)  -->
-                            <!-- ============================================= -->
+                            <!-- NOVO BLOCO DE AÇÕES -->
                             <div class="mt-6">
                                 @if ($livro->quantidade > 0)
-                                    {{-- Se houver estoque, mostramos o botão de Requisitar (se for cidadão) --}}
-                                    @if (auth()->check() && auth()->user()->role === 'cidadao')
-                                        <form method="POST" action="{{ route('requisicoes.store') }}">
-                                            @csrf
-                                            <input type="hidden" name="livros_ids[]" value="{{ $livro->id }}">
-                                            <button type="submit" class="btn btn-primary w-full">
-                                                ➕ Requisitar Agora ({{ $livro->quantidade }} disponíveis)
-                                            </button>
-                                        </form>
+                                    {{-- Mostra o botão apenas se o utilizador for um cidadão logado --}}
+                                    {{-- A nova condição verifica se o papel do utilizador está na lista de papéis permitidos --}}
+                                    @if (auth()->check() && in_array(auth()->user()->role, ['cidadao', 'admin']))
+                                        {{-- ESTE É O NOSSO NOVO BOTÃO --}}
+                                        <a href="{{ route('requisicoes.create', ['livro_id' => $livro->id]) }}"
+                                            class="btn btn-primary w-full shadow-lg">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none"
+                                                viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M12 4v16m8-8H4" />
+                                            </svg>
+                                            Requisitar este Livro
+                                        </a>
+                                        <p class="text-xs text-center mt-2 text-base-content/60">
+                                            Você será levado para a página de requisições para confirmar e adicionar
+                                            mais livros, se desejar.
+                                        </p>
                                     @endif
                                 @else
-                                    {{-- Se não houver estoque, mostramos o botão de Alerta --}}
+                                    {{-- A lógica do "Avise-me" continua igual aqui... --}}
                                     @if (auth()->check())
                                         @php
-                                            // Verificamos se o usuário atual já pediu um alerta para este livro
                                             $jaPediuAlerta = \App\Models\AlertaDisponibilidade::where(
                                                 'user_id',
                                                 auth()->id(),
@@ -135,7 +140,7 @@
                 </div>
             </div>
 
-            <!-- Card com Histórico de Requisições -->
+            <!-- Histórico de Requisições -->
             <div class="card bg-base-100 shadow-xl mt-8">
                 <div class="card-body">
                     <h3 class="card-title text-2xl mb-4">📜 Histórico de Requisições</h3>
@@ -183,11 +188,7 @@
                 </div>
             </div>
 
-            {{-- ... fim do card do Histórico de Requisições ... --}}
-
-            <!-- ============================================= -->
-            <!--   NOVO CARD PARA MOSTRAR AS AVALIAÇÕES        -->
-            <!-- ============================================= -->
+            <!-- Opiniões dos Leitores -->
             <div class="card bg-base-100 shadow-xl mt-8">
                 <div class="card-body">
                     <h3 class="card-title text-2xl mb-4">⭐ Opiniões dos Leitores</h3>
@@ -211,12 +212,15 @@
                                     <span class="italic">Este usuário não deixou um comentário.</span>
                                 @endif
                             </div>
+
                             <div class="chat-footer">
                                 <div class="rating rating-sm">
+                                    <input type="radio" name="rating-{{ $review->id }}" class="rating-hidden"
+                                        checked disabled />
                                     @for ($i = 1; $i <= 5; $i++)
                                         <input type="radio" name="rating-{{ $review->id }}"
                                             class="mask mask-star-2 bg-orange-400"
-                                            {{ $i == $review->classificacao ? 'checked' : '' }} disabled />
+                                            @if ($i == $review->classificacao) checked @endif disabled />
                                     @endfor
                                 </div>
                             </div>
@@ -232,11 +236,7 @@
                 </div>
             </div>
 
-            {{-- ... fim do card das Opiniões dos Leitores ... --}}
-
-            <!-- ============================================= -->
-            <!--   NOVA SECÇÃO DE LIVROS RELACIONADOS          -->
-            <!-- ============================================= -->
+            <!-- Livros Relacionados -->
             @if ($livrosRelacionados->isNotEmpty())
                 <div class="mt-8">
                     <h3 class="text-2xl font-bold mb-4">Você também pode gostar de...</h3>
