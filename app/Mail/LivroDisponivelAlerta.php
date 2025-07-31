@@ -2,8 +2,8 @@
 
 namespace App\Mail;
 
-use App\Models\Livro;
-use App\Models\User;
+use App\Models\Livro; // <-- Importar o modelo Livro
+use App\Models\User;  // <-- Importar o modelo User
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
@@ -11,20 +11,22 @@ use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
-class LivroDisponivelAlerta extends Mailable implements ShouldQueue
+class LivroDisponivelAlerta extends Mailable
 {
     use Queueable, SerializesModels;
 
+    // As nossas propriedades públicas para guardar os dados
     public Livro $livro;
     public User $user;
 
     /**
      * Create a new message instance.
      */
-    public function __construct(Livro $livro, User $user)
+    public function __construct(int $livroId, int $userId) // <-- Agora recebe IDs (números inteiros)
     {
-        $this->livro = $livro;
-        $this->user = $user;
+        // Busca os objetos frescos da base de dados usando os IDs
+        $this->livro = Livro::findOrFail($livroId);
+        $this->user = User::findOrFail($userId);
     }
 
     /**
@@ -42,8 +44,19 @@ class LivroDisponivelAlerta extends Mailable implements ShouldQueue
      */
     public function content(): Content
     {
+        // A view a ser usada para o email
         return new Content(
-            markdown: 'emails.livros.disponivel-alerta', // Aponta para a view que vamos criar
+            markdown: 'emails.livros.disponivel-alerta',
         );
+    }
+
+    /**
+     * Get the attachments for the message.
+     *
+     * @return array<int, \Illuminate\Mail\Mailables\Attachment>
+     */
+    public function attachments(): array
+    {
+        return [];
     }
 }

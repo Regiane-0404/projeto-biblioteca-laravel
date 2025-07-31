@@ -61,29 +61,25 @@
 
                             <p class="text-base-content/70 text-lg"><strong>ISBN:</strong> {{ $livro->isbn }}</p>
 
-                            <!-- NOVO BLOCO DE AÇÕES -->
-                            <div class="mt-6">
+                            <!-- Bloco de Ações Dinâmicas -->
+                            <div class="mt-6 space-y-4">
+
+                                {{-- ======================= BOTÃO DE EMPRÉSTIMO ======================= --}}
                                 @if ($livro->quantidade > 0)
-                                    {{-- Mostra o botão apenas se o utilizador for um cidadão logado --}}
-                                    {{-- A nova condição verifica se o papel do utilizador está na lista de papéis permitidos --}}
+                                    {{-- Verifica se o utilizador pode requisitar --}}
                                     @if (auth()->check() && in_array(auth()->user()->role, ['cidadao', 'admin']))
-                                        {{-- ESTE É O NOSSO NOVO BOTÃO --}}
                                         <a href="{{ route('requisicoes.create', ['livro_id' => $livro->id]) }}"
-                                            class="btn btn-primary w-full shadow-lg">
+                                            class="btn btn-secondary w-full shadow-lg">
                                             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none"
                                                 viewBox="0 0 24 24" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                     d="M12 4v16m8-8H4" />
                                             </svg>
-                                            Requisitar este Livro
+                                            Requisitar Empréstimo ({{ $livro->quantidade }} disponíveis)
                                         </a>
-                                        <p class="text-xs text-center mt-2 text-base-content/60">
-                                            Você será levado para a página de requisições para confirmar e adicionar
-                                            mais livros, se desejar.
-                                        </p>
                                     @endif
                                 @else
-                                    {{-- A lógica do "Avise-me" continua igual aqui... --}}
+                                    {{-- Lógica de "Avise-me" para empréstimo --}}
                                     @if (auth()->check())
                                         @php
                                             $jaPediuAlerta = \App\Models\AlertaDisponibilidade::where(
@@ -93,21 +89,68 @@
                                                 ->where('livro_id', $livro->id)
                                                 ->exists();
                                         @endphp
-
                                         @if ($jaPediuAlerta)
-                                            <div class="alert alert-success">
-                                                <span>👍 Já está na lista! Avisaremos quando estiver disponível.</span>
+                                            <div class="alert alert-info shadow-sm">
+                                                <div>
+                                                    <span>👍 Já está na lista de espera para empréstimo.</span>
+                                                </div>
                                             </div>
                                         @else
                                             <form method="POST"
                                                 action="{{ route('livros.solicitar-alerta', $livro) }}">
                                                 @csrf
-                                                <button type="submit" class="btn btn-secondary w-full">
-                                                    🔔 Avise-me quando disponível
+                                                <button type="submit" class="btn btn-outline btn-secondary w-full">
+                                                    🔔 Avise-me quando houver para empréstimo
                                                 </button>
                                             </form>
                                         @endif
                                     @endif
+                                @endif
+
+                                {{-- ======================= BOTÃO DE COMPRA (CARRINHO) ======================= --}}
+                                {{-- @if ($livro->preco && $livro->preco > 0)
+                                    @if ($livro->quantidade_venda > 0)
+                                        <form action="{{ route('cart.add', $livro->id) }}" method="POST" class="m-0">
+                                            @csrf
+                                            <button type="submit" class="btn btn-primary w-full shadow-lg">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
+                                                Comprar por €{{ number_format((float)$livro->preco, 2, ',', '.') }}
+                                                <div class="badge badge-outline ml-2">{{ $livro->quantidade_venda }} em stock</div>
+                                            </button>
+                                        </form>
+                                    @else
+                                        <button class="btn btn-primary w-full" disabled>
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
+                                            Esgotado para Venda
+                                        </button>
+                                    @endif
+                                @endif --}}
+                                {{-- ======================= BOTÃO DE COMPRA (CARRINHO) ======================= --}}
+                                {{-- A correção está em (float)$livro->preco > 0 --}}
+                                @if ((float) $livro->preco > 0 && $livro->quantidade_venda > 0)
+                                    <form action="{{ route('cart.add', $livro->id) }}" method="POST" class="m-0">
+                                        @csrf
+                                        <button type="submit" class="btn btn-primary w-full shadow-lg">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none"
+                                                viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                                            </svg>
+                                            Comprar por €{{ number_format((float) $livro->preco, 2, ',', '.') }}
+                                            <div class="badge badge-outline ml-2">{{ $livro->quantidade_venda }} em
+                                                stock</div>
+                                        </button>
+                                    </form>
+                                @elseif((float) $livro->preco > 0)
+                                    {{-- Mostra 'Esgotado' se tiver preço mas não tiver stock de venda --}}
+                                    <button class="btn btn-primary w-full" disabled>
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none"
+                                            viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                                        </svg>
+                                        Esgotado para Venda
+                                    </button>
                                 @endif
                             </div>
 
@@ -187,8 +230,6 @@
                     </div>
                 </div>
             </div>
-
-
 
             <!-- Livros Relacionados -->
             @if ($livrosRelacionados->isNotEmpty())

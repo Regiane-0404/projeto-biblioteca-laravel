@@ -10,6 +10,7 @@ use Illuminate\Notifications\Notifiable;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 use Laravel\Jetstream\HasProfilePhoto;
 use Laravel\Sanctum\HasApiTokens;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class User extends Authenticatable
 {
@@ -90,5 +91,11 @@ class User extends Authenticatable
     public function alertasDisponibilidade()
     {
         return $this->hasMany(AlertaDisponibilidade::class);
+    }
+
+
+    public function cart(): HasOne
+    {
+        return $this->hasOne(Cart::class);
     }
 }

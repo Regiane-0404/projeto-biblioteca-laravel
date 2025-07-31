@@ -118,10 +118,15 @@ class RequisicaoController extends Controller
         foreach (array_unique($validated['livros_ids']) as $livro_id) {
             $livro = Livro::find($livro_id);
             if ($livro && $livro->isDisponivel()) {
-                Requisicao::create(['user_id' => $user->id, 'livro_id' => $livro_id, 'data_inicio' => now(), 'data_fim_prevista' => now()->addDays(5),]);
+                $novaRequisicao = Requisicao::create([
+                    'user_id' => $user->id,
+                    'livro_id' => $livro_id,
+                    'data_inicio' => now(),
+                    'data_fim_prevista' => now()->addDays(5),
+                ]);
                 $livro->decrement('quantidade');
-                // Mail::to($user->email)->queue(new RequisicaoCriada($novaRequisicao));
-                // Mail::to('regianecinel@gmail.com')->queue(new NovaRequisicaoParaAdmin($novaRequisicao));
+                Mail::to($user->email)->queue(new RequisicaoCriada($novaRequisicao));
+                Mail::to('regianecinel@gmail.com')->queue(new NovaRequisicaoParaAdmin($novaRequisicao));
                 $livrosCriados++;
             }
         }
@@ -157,7 +162,8 @@ class RequisicaoController extends Controller
                     $alertas = AlertaDisponibilidade::where('livro_id', $livroDevolvido->id)->with('user')->get();
                     foreach ($alertas as $alerta) {
                         if ($alerta->user) {
-                            Mail::to($alerta->user->email)->queue(new LivroDisponivelAlerta($livroDevolvido, $alerta->user));
+                            // Linha CORRIGIDA
+                            Mail::to($alerta->user->email)->queue(new LivroDisponivelAlerta($livroDevolvido->id, $alerta->user->id));
                         }
                         $alerta->delete();
                     }

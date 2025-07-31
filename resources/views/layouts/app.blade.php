@@ -52,6 +52,8 @@
                             </ul>
                         </div>
                     </div>
+
+
                 </div>
             </header>
         @endif
@@ -81,7 +83,7 @@
     </script>
 
     {{-- ========================================================= --}}
-    {{-- == COLE O CÓDIGO DO MODAL DE CRIAÇÃO AQUI            == --}}
+    {{-- == MODAL DE CRIAÇÃO DE UTILIZADOR                      == --}}
     {{-- ========================================================= --}}
     @if (auth()->check() && auth()->user()->role === 'admin')
         <dialog id="modal_create_user" class="modal">
@@ -91,7 +93,7 @@
                     <h3 class="font-bold text-lg mb-4">➕ Criar Novo Utilizador</h3>
 
                     <div class="space-y-4">
-                        <!-- Campo Nome -->
+                        <!-- Nome -->
                         <div class="form-control">
                             <label class="label"><span class="label-text">Nome</span></label>
                             <input type="text" name="name" placeholder="Nome completo do utilizador"
@@ -101,7 +103,7 @@
                             @enderror
                         </div>
 
-                        <!-- Campo Email -->
+                        <!-- Email -->
                         <div class="form-control">
                             <label class="label"><span class="label-text">Email</span></label>
                             <input type="email" name="email" placeholder="email@exemplo.com"
@@ -111,7 +113,7 @@
                             @enderror
                         </div>
 
-                        <!-- Campo Papel (Role) -->
+                        <!-- Role -->
                         <div class="form-control">
                             <label class="label"><span class="label-text">Papel / Função</span></label>
                             <select name="role" class="select select-bordered w-full" required>
@@ -123,7 +125,7 @@
                             @enderror
                         </div>
 
-                        <!-- Campo Password -->
+                        <!-- Password -->
                         <div class="form-control">
                             <label class="label"><span class="label-text">Password</span></label>
                             <input type="password" name="password" class="input input-bordered w-full" required />
@@ -132,7 +134,7 @@
                             @enderror
                         </div>
 
-                        <!-- Campo Confirmação de Password -->
+                        <!-- Confirmar Password -->
                         <div class="form-control">
                             <label class="label"><span class="label-text">Confirmar Password</span></label>
                             <input type="password" name="password_confirmation" class="input input-bordered w-full"
@@ -140,14 +142,10 @@
                         </div>
                     </div>
 
-                    <!-- Ações do Modal -->
+                    <!-- Ações -->
                     <div class="modal-action mt-6">
-                        {{-- 
-                            Este botão agora é um link <a> que, ao ser clicado,
-                            simplesmente fecha o modal. O "event.preventDefault()"
-                            impede que a página recarregue.
-                        --}}
-                        <a href="#" class="btn btn-ghost" onclick="event.preventDefault(); document.getElementById('modal_create_user').close();">
+                        <a href="#" class="btn btn-ghost"
+                            onclick="event.preventDefault(); document.getElementById('modal_create_user').close();">
                             Cancelar
                         </a>
                         <button type="submit" class="btn btn-primary">Salvar Utilizador</button>

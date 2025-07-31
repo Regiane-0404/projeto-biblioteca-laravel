@@ -22,7 +22,8 @@ class Livro extends Model
         'imagem_capa',
         'preco',
         'ativo',
-        'quantidade', // <-- ADICIONADO
+        'quantidade', 
+        'quantidade_venda', 
     ];
 
     protected $encryptable = [

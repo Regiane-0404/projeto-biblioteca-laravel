@@ -3,10 +3,22 @@
         <h2 class="text-2xl font-bold text-base-content">
             👥 Gestão de Usuários
         </h2>
+
     </x-slot>
+
 
     <div class="py-6">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+            {{-- ======================================================== --}}
+            {{-- == BOTÃO MOVIDO PARA AQUI, ABAIXO DO HEADER           == --}}
+            {{-- ======================================================== --}}
+            <div class="flex justify-start mb-4">
+                <a href="{{ route('users.create') }}" class="btn btn-primary">
+                    ➕ Adicionar Novo
+                </a>
+            </div>
+
             {{-- Mensagens de Feedback --}}
             @if (session('success'))
                 <div role="alert" class="alert alert-success mb-6"><span>{{ session('success') }}</span></div>
@@ -17,9 +29,9 @@
 
             <div class="card bg-base-100 shadow-xl">
                 <div class="card-body">
-                    <div class="flex justify-between items-center mb-4">
+                    {{-- O botão foi removido daqui --}}
+                    <div class="mb-4">
                         <h3 class="card-title">Lista de Usuários</h3>
-                        {{-- O BOTÃO "+ NOVO UTILIZADOR" FOI REMOVIDO DESTA ÁREA, pois a criação é feita pelo menu --}}
                     </div>
 
                     <!-- Formulário de Pesquisa e Filtros -->
@@ -51,15 +63,11 @@
                         </a>
                     </div>
 
-                    <!-- ============================================= -->
-                    <!-- == INÍCIO DA CORREÇÃO: overflow-visible      == -->
-                    <!-- ============================================= -->
                     <div class="overflow-x-auto overflow-visible">
                         <table class="table w-full">
                             <thead>
                                 <tr>
-                                    <th>
-                                        <a
+                                    <th><a
                                             href="{{ route('users.index', array_merge(request()->query(), ['order_by' => 'name', 'order_direction' => request('order_direction', 'asc') == 'asc' ? 'desc' : 'asc'])) }}">Nome</a>
                                     </th>
                                     <th>Email</th>
@@ -92,32 +100,35 @@
                                             @endif
                                         </td>
                                         <td class="text-right">
-                                            <!-- ============================================= -->
-                                            <!-- == DROPDOWN SIMPLIFICADO E CORRIGIDO         == -->
-                                            <!-- ============================================= -->
                                             <div class="dropdown dropdown-end">
-                                                <div tabindex="0" role="button" class="btn btn-ghost btn-sm">...</div>
-                                                <ul tabindex="0" class="dropdown-content menu p-2 shadow-lg bg-base-100 rounded-box w-52 z-[1]">
-                                                    <li><a href="{{ route('users.show', $user) }}">👁️ Ver Detalhes</a></li>
+                                                <div tabindex="0" role="button" class="btn btn-ghost btn-sm">...
+                                                </div>
+                                                <ul tabindex="0"
+                                                    class="dropdown-content menu p-2 shadow-lg bg-base-100 rounded-box w-52 z-[1]">
+                                                    <li><a href="{{ route('users.show', $user) }}">👁️ Ver Detalhes</a>
+                                                    </li>
                                                     <li><a href="{{ route('users.edit', $user) }}">✏️ Editar</a></li>
                                                     <div class="divider my-1"></div>
                                                     @if ($user->id !== auth()->id())
                                                         <li>
-                                                            <form class="w-full" method="POST" action="{{ route('users.toggle-status', $user) }}" onsubmit="return confirm('Tem a certeza?')">
+                                                            <form class="w-full" method="POST"
+                                                                action="{{ route('users.toggle-status', $user) }}"
+                                                                onsubmit="return confirm('Tem a certeza?')">
                                                                 @csrf @method('PATCH')
-                                                                <button type="submit" class="w-full text-left p-2 rounded-lg hover:bg-base-200">
-                                                                    {{ $user->ativo ? '⚠️ Inativar' : '✅ Ativar' }}
-                                                                </button>
+                                                                <button type="submit"
+                                                                    class="w-full text-left p-2 rounded-lg hover:bg-base-200">{{ $user->ativo ? '⚠️ Inativar' : '✅ Ativar' }}</button>
                                                             </form>
                                                         </li>
                                                     @endif
                                                     @if (!$user->requisicoes()->exists() && $user->id !== auth()->id())
                                                         <li>
-                                                            <form class="w-full" method="POST" action="{{ route('users.destroy', $user) }}" onsubmit="return confirm('AÇÃO IRREVERSÍVEL! Tem a certeza?')">
+                                                            <form class="w-full" method="POST"
+                                                                action="{{ route('users.destroy', $user) }}"
+                                                                onsubmit="return confirm('AÇÃO IRREVERSÍVEL! Tem a certeza?')">
                                                                 @csrf @method('DELETE')
-                                                                <button type="submit" class="w-full text-left p-2 rounded-lg hover:bg-error hover:text-error-content">
-                                                                    ❌ Excluir
-                                                                </button>
+                                                                <button type="submit"
+                                                                    class="w-full text-left p-2 rounded-lg hover:bg-error hover:text-error-content">❌
+                                                                    Excluir</button>
                                                             </form>
                                                         </li>
                                                     @endif
@@ -135,10 +146,6 @@
                             </tbody>
                         </table>
                     </div>
-                    <!-- ============================================= -->
-                    <!-- == FIM DA CORREÇÃO                         == -->
-                    <!-- ============================================= -->
-
                     <div class="mt-6">
                         {{ $users->links() }}
                     </div>

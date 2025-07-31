@@ -549,4 +549,14 @@ class LivroController extends Controller
 
         return back()->with('success', 'Perfeito! Você será notificado por email assim que este livro estiver disponível.');
     }
+
+    public function cancelarAlerta(Request $request, Livro $livro)
+    {
+        // Encontra e apaga o alerta específico deste utilizador para este livro
+        AlertaDisponibilidade::where('user_id', auth()->id())
+            ->where('livro_id', $livro->id)
+            ->delete();
+
+        return back()->with('success', 'A sua subscrição do alerta foi cancelada.');
+    }
 }

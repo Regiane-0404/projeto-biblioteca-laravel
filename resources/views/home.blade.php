@@ -103,6 +103,7 @@
                                 @else
                                     <div class="badge badge-error badge-outline">Esgotado</div>
                                 @endif
+
                             </div>
                         </div>
                     </div>
@@ -202,7 +203,8 @@
                                             @else
                                                 <div
                                                     class="w-full h-48 bg-base-200 rounded-lg flex items-center justify-center">
-                                                    <span class="text-4xl opacity-30">📚</span></div>
+                                                    <span class="text-4xl opacity-30">📚</span>
+                                                </div>
                                             @endif
                                         </a>
                                     </div>

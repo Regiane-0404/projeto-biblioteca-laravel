@@ -7,15 +7,11 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 
-
-
-
 class UserController extends Controller
 {
 
     public function index(Request $request)
     {
-
         $query = User::withCount('requisicoes');
 
         // 2. Lógica de Pesquisa (sem alterações)
@@ -47,18 +43,9 @@ class UserController extends Controller
         // 6. Paginação (sem alterações)
         $users = $query->paginate(10)->withQueryString();
 
-        // 7. Retorno para a view (sem alterações)
-
-        $users = $query->paginate(10)->withQueryString();
-
-        // LINHA DE DIAGNÓSTICO
-        //dd($users->first()); // Mostra-nos os dados do primeiro usuário da 
         return view('users.index', compact('users'));
     }
-    /**
-     * Mostra a página de detalhes de um usuário específico, incluindo seu histórico.
-     * Acessível apenas por Admins.
-     */
+
     public function show(User $user)
     {
         // queremos os detalhes do livro associado. Ordenamos pela mais recente.
@@ -79,7 +66,13 @@ class UserController extends Controller
         return view('users.show', compact('user'));
     }
 
-
+    // =========================================================
+    // == MÉTODO create() RESTAURADO                          ==
+    // =========================================================
+    public function create()
+    {
+        return view('users.create');
+    }
 
     public function store(Request $request)
     {
@@ -133,9 +126,6 @@ class UserController extends Controller
         return redirect()->route('users.index')->with('success', 'Usuário atualizado com sucesso!');
     }
 
-    /**
-     * Remove o usuário da base de dados.
-     */
     public function destroy(User $user)
     {
         // Regra de segurança: não permitir que um usuário se apague a si mesmo.
@@ -160,21 +150,12 @@ class UserController extends Controller
         if ($user->id === auth()->id()) {
             return back()->with('error', 'Você não pode alterar o status da sua própria conta.');
         }
-
-        // 1. Inverte o valor do atributo 'ativo'.
-        // Se for 1 (true), torna-se 0 (false). Se for 0, torna-se 1.
+        
         $user->ativo = !$user->ativo;
-
-        // 2. Salva explicitamente o modelo inteiro na base de dados.
         $user->save();
-
-        // 3. Força o recarregamento do modelo da base de dados para garantir que temos o valor mais recente.
         $user->refresh();
-
-        // 4. Cria a mensagem de sucesso com o valor GARANTIDAMENTE atualizado.
         $mensagemStatus = $user->ativo ? 'ativado' : 'inativado';
 
-        // 5. Retorna com a mensagem correta.
         return back()->with('success', "Usuário {$mensagemStatus} com sucesso!");
     }
 }

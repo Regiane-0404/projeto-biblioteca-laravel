@@ -8,7 +8,8 @@ use App\Http\Controllers\{
     RequisicaoController,
     ReviewController,
     UserController,
-    HomeController
+    HomeController,
+    CartController,
 };
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
@@ -21,6 +22,16 @@ use Illuminate\Support\Facades\Auth;
 */
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
+
+/*
+|--------------------------------------------------------------------------
+| Rotas do Carrinho de Compras (Públicas)
+|--------------------------------------------------------------------------
+*/
+Route::get('/carrinho', [CartController::class, 'index'])->name('cart.index');
+Route::post('/carrinho/adicionar/{livro}', [CartController::class, 'add'])->name('cart.add');
+Route::patch('/carrinho/atualizar/{item}', [CartController::class, 'update'])->name('cart.update');
+Route::delete('/carrinho/remover/{item}', [CartController::class, 'remove'])->name('cart.remove');
 
 /*
 |--------------------------------------------------------------------------
@@ -45,10 +56,9 @@ Route::middleware([
     Route::get('/livros', [LivroController::class, 'index'])->name('livros.index');
     Route::get('/livros/{livro}', [LivroController::class, 'show'])->where('livro', '[0-9]+')->name('livros.show');
 
-    // =======================================================
-    //    AQUI ESTÁ A NOVA ROTA, NO SÍTIO CERTO
-    // =======================================================
+
     Route::post('/livros/{livro}/solicitar-alerta', [LivroController::class, 'solicitarAlerta'])->name('livros.solicitar-alerta');
+    Route::delete('/livros/{livro}/cancelar-alerta', [LivroController::class, 'cancelarAlerta'])->name('livros.cancelar-alerta');
 
 
     // Autores e Editoras (consulta)
@@ -93,7 +103,8 @@ Route::middleware([
         Route::resource('editoras', EditoraController::class)->except(['index', 'show']);
 
         // Gestão de Usuários
-        Route::resource('users', UserController::class)->except(['create']);
+        //Route::resource('users', UserController::class)->except(['create']);
+        Route::resource('users', UserController::class);
         Route::patch('/users/{user}/toggle-status', [UserController::class, 'toggleStatus'])->name('users.toggle-status');
 
 
