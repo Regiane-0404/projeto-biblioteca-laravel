@@ -11,9 +11,8 @@ class Cart extends Model
 {
     use HasFactory;
 
-    /**
-     * A que utilizador este carrinho pertence.
-     */
+
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

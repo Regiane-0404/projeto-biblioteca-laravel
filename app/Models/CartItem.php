@@ -22,6 +22,8 @@ class CartItem extends Model
         'cart_id',
         'livro_id',
         'quantity',
+    
+       
     ];
 
     /**

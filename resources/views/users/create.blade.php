@@ -34,14 +34,9 @@
                                     <label class="label">
                                         <span class="label-text font-semibold">Nome Completo *</span>
                                     </label>
-                                    <input 
-                                        type="text" 
-                                        name="name" 
-                                        value="{{ old('name') }}"
-                                        placeholder="Ex: João Silva" 
-                                        class="input input-bordered @error('name') input-error @enderror"
-                                        required
-                                    >
+                                    <input type="text" name="name" value="{{ old('name') }}"
+                                        placeholder="Ex: João Silva"
+                                        class="input input-bordered @error('name') input-error @enderror" required>
                                     @error('name')
                                         <label class="label">
                                             <span class="label-text-alt text-error">{{ $message }}</span>
@@ -53,14 +48,9 @@
                                     <label class="label">
                                         <span class="label-text font-semibold">Email *</span>
                                     </label>
-                                    <input 
-                                        type="email" 
-                                        name="email" 
-                                        value="{{ old('email') }}"
-                                        placeholder="Ex: joao@exemplo.com" 
-                                        class="input input-bordered @error('email') input-error @enderror"
-                                        required
-                                    >
+                                    <input type="email" name="email" value="{{ old('email') }}"
+                                        placeholder="Ex: joao@exemplo.com"
+                                        class="input input-bordered @error('email') input-error @enderror" required>
                                     @error('email')
                                         <label class="label">
                                             <span class="label-text-alt text-error">{{ $message }}</span>
@@ -75,11 +65,8 @@
                                     <label class="label">
                                         <span class="label-text font-semibold">Perfil de Usuário *</span>
                                     </label>
-                                    <select 
-                                        name="role" 
-                                        class="select select-bordered @error('role') select-error @enderror"
-                                        required
-                                    >
+                                    <select name="role"
+                                        class="select select-bordered @error('role') select-error @enderror" required>
                                         <option value="">Selecione o perfil...</option>
                                         <option value="cidadao" {{ old('role') === 'cidadao' ? 'selected' : '' }}>
                                             👤 Cidadão (Pode requisitar livros)
@@ -101,13 +88,9 @@
                                     </label>
                                     <div class="form-control">
                                         <label class="label cursor-pointer justify-start">
-                                            <input 
-                                                type="checkbox" 
-                                                name="ativo" 
-                                                value="1" 
-                                                class="checkbox checkbox-success mr-3" 
-                                                {{ old('ativo', true) ? 'checked' : '' }}
-                                            >
+                                            <input type="checkbox" name="ativo" value="1"
+                                                class="checkbox checkbox-success mr-3"
+                                                {{ old('ativo', true) ? 'checked' : '' }}>
                                             <span class="label-text">✅ Usuário ativo (pode fazer login)</span>
                                         </label>
                                     </div>
@@ -117,19 +100,14 @@
 
                         <!-- Seção de Senha (largura completa) -->
                         <div class="divider">Configuração de Acesso</div>
-                        
+
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div class="form-control mb-6">
                                 <label class="label">
                                     <span class="label-text font-semibold">Senha *</span>
                                 </label>
-                                <input 
-                                    type="password" 
-                                    name="password" 
-                                    placeholder="Mínimo 6 caracteres" 
-                                    class="input input-bordered @error('password') input-error @enderror"
-                                    required
-                                >
+                                <input type="password" name="password" placeholder="Mínimo 6 caracteres"
+                                    class="input input-bordered @error('password') input-error @enderror" required>
                                 @error('password')
                                     <label class="label">
                                         <span class="label-text-alt text-error">{{ $message }}</span>
@@ -141,13 +119,8 @@
                                 <label class="label">
                                     <span class="label-text font-semibold">Confirmar Senha *</span>
                                 </label>
-                                <input 
-                                    type="password" 
-                                    name="password_confirmation" 
-                                    placeholder="Digite a senha novamente" 
-                                    class="input input-bordered"
-                                    required
-                                >
+                                <input type="password" name="password_confirmation"
+                                    placeholder="Digite a senha novamente" class="input input-bordered" required>
                             </div>
                         </div>
 
@@ -155,8 +128,10 @@
                         <div class="alert alert-info mb-6">
                             <span>ℹ️ <strong>Informações importantes:</strong></span>
                             <ul class="list-disc list-inside mt-2">
-                                <li><strong>Administradores:</strong> Podem gerenciar livros, autores, editoras e usuários</li>
-                                <li><strong>Cidadãos:</strong> Podem apenas requisitar livros e ver suas próprias requisições</li>
+                                <li><strong>Administradores:</strong> Podem gerenciar livros, autores, editoras e
+                                    usuários</li>
+                                <li><strong>Cidadãos:</strong> Podem apenas requisitar livros e ver suas próprias
+                                    requisições</li>
                                 <li><strong>Usuários inativos:</strong> Não conseguem fazer login no sistema</li>
                             </ul>
                         </div>
@@ -176,4 +151,3 @@
         </div>
     </div>
 </x-app-layout>```
-

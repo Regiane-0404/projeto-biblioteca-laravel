@@ -108,7 +108,7 @@
                         </div>
                         <div class="card-actions justify-end mt-6">
                             <a href="{{ route('home') }}" class="btn btn-ghost">Continuar a Comprar</a>
-                            <a href="#" class="btn btn-primary">Finalizar Compra</a>
+                            <a href="{{ route('checkout.morada.form') }}" class="btn btn-primary">Finalizar Compra</a>
                         </div>
                     @else
                         <div class="text-center py-12">

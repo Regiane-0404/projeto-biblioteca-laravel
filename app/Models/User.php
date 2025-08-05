@@ -96,6 +96,14 @@ class User extends Authenticatable
 
     public function cart(): HasOne
     {
-        return $this->hasOne(Cart::class);
+        // Garante que, se não houver carrinho, um novo é criado com o user_id correto
+        return $this->hasOne(Cart::class)->withDefault();
+    }
+
+    /* Define a relação: Um utilizador pode ter muitas moradas.
+ */
+    public function addresses(): HasMany
+    {
+        return $this->hasMany(Address::class);
     }
 }
