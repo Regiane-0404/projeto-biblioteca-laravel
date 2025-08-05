@@ -20,7 +20,7 @@ class CartItem extends Model
      */
     protected $fillable = [
         'cart_id',
-        'book_id',
+        'livro_id',
         'quantity',
     ];
 
@@ -29,7 +29,7 @@ class CartItem extends Model
      */
     public function cart(): BelongsTo
     {
-        return $this->belongsTo(Cart::class);
+        return $this->belongsTo(Livro::class, 'livro_id');
     }
 
     /**
@@ -39,6 +39,6 @@ class CartItem extends Model
     public function livro(): BelongsTo
     {
         // Note que estamos a ligar ao modelo 'Livro'
-        return $this->belongsTo(Livro::class, 'book_id');
+        return $this->belongsTo(Livro::class, 'livro_id');
     }
 }

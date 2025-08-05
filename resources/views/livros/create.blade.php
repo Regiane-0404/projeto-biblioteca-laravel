@@ -113,22 +113,36 @@
                                 </div>
 
                                 <!-- ============================================= -->
-                                <!--   NOVO CAMPO PARA QUANTIDADE EM ESTOQUE       -->
+                                <!--   CAMPO PARA QUANTIDADE EM ESTOQUE (EMPRÉSTIMO) -->
                                 <!-- ============================================= -->
                                 <div class="form-control">
                                     <label class="label">
-                                        <span class="label-text">Quantidade em Estoque</span>
+                                        <span class="label-text">Quantidade em Estoque (Empréstimo)</span>
                                     </label>
                                     <input type="number" name="quantidade" value="{{ old('quantidade', 1) }}"
-                                        placeholder="Ex: 5"
                                         class="input input-bordered @error('quantidade') input-error @enderror"
                                         min="0" required>
                                     @error('quantidade')
-                                        <label class="label">
-                                            <span class="label-text-alt text-error">{{ $message }}</span>
-                                        </label>
+                                        <div class="label"><span
+                                                class="label-text-alt text-error">{{ $message }}</span></div>
                                     @enderror
                                 </div>
+
+                                {{-- ============================================= --}}
+                                {{-- == NOVO CAMPO PARA QUANTIDADE DE VENDA     == --}}
+                                {{-- ============================================= --}}
+                                <div class="form-control">
+                                    <label class="label"><span class="label-text">Quantidade para Venda</span></label>
+                                    <input type="number" name="quantidade_venda"
+                                        value="{{ old('quantidade_venda', 0) }}"
+                                        class="input input-bordered @error('quantidade_venda') input-error @enderror"
+                                        min="0" required>
+                                    @error('quantidade_venda')
+                                        <div class="label"><span
+                                                class="label-text-alt text-error">{{ $message }}</span></div>
+                                    @enderror
+                                </div>
+                                {{-- ============================================= --}}
 
                             </div>
 

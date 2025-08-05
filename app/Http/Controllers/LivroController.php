@@ -164,6 +164,7 @@ class LivroController extends Controller
             'bibliografia' => 'nullable|string|max:1000',
             'imagem_capa' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'quantidade' => 'required|integer|min:0',
+            'quantidade_venda' => 'required|integer|min:0',
         ], [
             'nome.required' => 'O nome do livro é obrigatório',
             'isbn.required' => 'O ISBN é obrigatório',
@@ -199,6 +200,7 @@ class LivroController extends Controller
             'imagem_capa' => $imagemPath,
             'ativo' => true, // Novo livro sempre ativo
             'quantidade' => $validated['quantidade'],
+            'quantidade_venda' => $validated['quantidade_venda'],
         ]);
 
         // 4. Associar autores
@@ -264,6 +266,7 @@ class LivroController extends Controller
             'bibliografia' => 'nullable|string|max:1000',
             'imagem_capa' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'quantidade' => 'required|integer|min:0',
+            'quantidade_venda' => 'required|integer|min:0',
         ], [
             'nome.required' => 'O nome do livro é obrigatório',
             'isbn.required' => 'O ISBN é obrigatório',
@@ -304,6 +307,7 @@ class LivroController extends Controller
             'bibliografia' => $validated['bibliografia'],
             'imagem_capa' => $imagemPath,
             'quantidade' => $validated['quantidade'],
+            'quantidade_venda' => $validated['quantidade_venda']
         ]);
 
         // 4. Atualizar autores (remover os antigos e adicionar os novos)

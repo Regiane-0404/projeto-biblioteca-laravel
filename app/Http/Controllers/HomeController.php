@@ -7,8 +7,6 @@ use App\Models\Editora;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Pagination\Paginator;
-use App\Models\Review;
-use App\Models\User;
 
 class HomeController extends Controller
 {
@@ -20,12 +18,22 @@ class HomeController extends Controller
         }
 
         $todosLivros = $query->get();
+
+        // =======================================================
+        // == A CORREÇÃO ESTÁ AQUI DENTRO                       ==
+        // =======================================================
         $todosLivros->each(function ($livro) {
             $livro->nome_visivel = $livro->nome;
+
+            $valor = preg_replace('/[^\d,\.]/', '', $livro->preco);
+            $valor = str_replace(',', '.', $valor);
+            $livro->preco_visivel = (float) $valor;
+
             $livro->autores->each(function ($autor) {
                 $autor->nome_visivel = $autor->nome;
             });
         });
+
 
         $livrosFiltrados = $todosLivros;
         if ($request->filled('search')) {
@@ -54,12 +62,11 @@ class HomeController extends Controller
             $editora->nome_visivel = $editora->nome;
         });
 
+        // A variável $reviewsRecentes precisa de ser adicionada aqui também, se quisermos o carrossel
+        // Supondo que o modelo Review está importado no topo.
+        // use App\Models\Review;
+        $reviewsRecentes = \App\Models\Review::where('status', 'aprovado')->with(['user', 'livro'])->latest()->take(3)->get();
 
-        $reviewsRecentes = Review::where('status', 'aprovado') // Apenas as aprovadas
-            ->with(['user', 'livro'])                           // Carrega os dados do user e do livro
-            ->latest()                                          // Ordena pelas mais recentes
-            ->take(3)                                           // Pega no máximo 3
-            ->get();
         return view('home', compact('livros', 'editoras', 'reviewsRecentes'));
     }
 }

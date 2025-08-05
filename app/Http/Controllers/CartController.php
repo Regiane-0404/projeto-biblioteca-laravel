@@ -3,89 +3,106 @@
 namespace App\Http\Controllers;
 
 use App\Models\Livro;
-use App\Models\Cart; // Importamos o nosso modelo Cart
+use App\Models\Cart;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
-
 class CartController extends Controller
 {
-    /**
-     * Mostra a página do carrinho de compras.
-     */
+
+
+    // Ficheiro: app/Http/Controllers/CartController.php
+
+    // Ficheiro: app/Http/Controllers/CartController.php
+
     public function index()
     {
-        dd('Página do Carrinho (index)');
-    }
+        $cartItems = collect();
+        $total = 0;
 
-     /* Adiciona um livro ao carrinho.
-     */
-    public function add(Request $request, Livro $livro)
-    {
-        // Validação: Não permitir adicionar se não houver stock para venda.
-        if ($livro->quantidade_venda <= 0) {
-            return back()->with('error', 'Este livro não está mais disponível para venda.');
-        }
-
-        // LÓGICA PARA UTILIZADOR LOGADO
-        if (Auth::check()) {
-            $user = Auth::user();
-            // Encontra ou cria um carrinho para o utilizador.
-            $cart = $user->cart()->firstOrCreate();
-
-            // Verifica se o livro já existe no carrinho.
-            $cartItem = $cart->items()->where('book_id', $livro->id)->first();
-
-            if ($cartItem) {
-                // Se existe, apenas incrementa a quantidade.
-                $cartItem->increment('quantity');
-            } else {
-                // Se não existe, cria um novo item no carrinho.
-                $cart->items()->create([
-                    'book_id' => $livro->id,
-                    'quantity' => 1,
+        if (Auth::check() && Auth::user()->cart) {
+            // A CORREÇÃO ESTÁ AQUI: Garante que só carrega itens com livros válidos.
+            $cartItems = Auth::user()->cart->items()->whereHas('livro')->with('livro')->get();
+        } else {
+            $cartFromSession = session('cart', []);
+            foreach ($cartFromSession as $id => $details) {
+                $cartItems->push((object) [
+                    'id' => $id,
+                    'quantity' => $details['quantity'],
+                    'livro' => (object) ($details['livro_data'] ?? null),
                 ]);
             }
         }
-        // LÓGICA PARA VISITANTE (NÃO LOGADO)
-        else {
-            // Pega o carrinho da sessão ou um array vazio.
-            $cart = session('cart', []);
 
+        foreach ($cartItems as $item) {
+            if ($item->livro && isset($item->livro->preco)) {
+                $total += (float)$item->livro->preco * $item->quantity;
+            }
+        }
+        return view('cart.index', compact('cartItems', 'total'));
+    }
+
+    public function add(Request $request, Livro $livro)
+    {
+        if (($livro->quantidade_venda ?? 0) <= 0) {
+            return back()->with('error', 'Este livro não está mais disponível para venda.');
+        }
+
+        if (Auth::check()) {
+            $user = Auth::user();
+            $cart = $user->cart()->firstOrCreate();
+            $cartItem = $cart->items()->where('livro_id', $livro->id)->first();
+
+            if ($cartItem) {
+                $cartItem->increment('quantity');
+            } else {
+                $cart->items()->create([
+                    'livro_id' => $livro->id,
+                    'quantity' => 1
+                ]);
+            }
+        } else {
+            $cart = session('cart', []);
             if (isset($cart[$livro->id])) {
-                // Se o item já existe na sessão, incrementa a quantidade.
                 $cart[$livro->id]['quantity']++;
             } else {
-                // Se não existe, adiciona o livro à sessão.
                 $cart[$livro->id] = [
-                    "livro_id" => $livro->id, // Guardamos o ID para referência futura
-                    "nome" => $livro->nome,
-                    "quantity" => 1,
-                    "preco" => (float) $livro->preco, // Guardamos o preço atual
-                    "imagem_capa" => $livro->imagem_capa // E a imagem
+                    'quantity' => 1,
+                    'livro_data' => [
+                        'id'          => $livro->id,
+                        'nome'        => $livro->nome,
+                        'preco'       => (float) $livro->preco,
+                        'imagem_capa' => $livro->imagem_capa
+                    ]
                 ];
             }
-            // Guarda o carrinho atualizado de volta na sessão.
             session()->put('cart', $cart);
         }
 
-        // Redireciona para a página anterior com uma mensagem de sucesso.
         return back()->with('success', 'Livro adicionado ao carrinho!');
     }
 
-    /**
-     * Atualiza a quantidade de um item no carrinho.
-     */
-    public function update(Request $request, $itemId)
-    {
-        dd('Atualizar Item ID: ' . $itemId);
-    }
-
-    /**
-     * Remove um item do carrinho.
-     */
     public function remove($itemId)
     {
-        dd('Remover Item ID: ' . $itemId);
+        $cartIsEmpty = false;
+
+        if (Auth::check()) {
+            $user = Auth::user();
+            if ($user->cart) {
+                $user->cart->items()->where('id', $itemId)->delete();
+                $cartIsEmpty = $user->cart->items()->count() === 0;
+            }
+        } else {
+            $cart = session('cart', []);
+            unset($cart[$itemId]);
+            session()->put('cart', $cart);
+            $cartIsEmpty = empty($cart);
+        }
+
+        if ($cartIsEmpty) {
+            return redirect()->route('home')->with('success', 'Seu carrinho está vazio. Continue explorando nossos livros!');
+        }
+
+        return back()->with('success', 'Livro removido do carrinho.');
     }
 }
