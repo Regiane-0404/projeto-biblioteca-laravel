@@ -33,40 +33,50 @@ class CheckoutController extends Controller
             return redirect()->route('cart.index')->with('error', 'O seu carrinho está vazio.');
         }
 
+        $encomendaCriada = null; // Variável para guardar a encomenda
+
         try {
-            DB::transaction(function () use ($user, $cartItems, $request) {
+            DB::transaction(function () use ($user, $cartItems, $request, &$encomendaCriada) {
                 // Validar e guardar a morada
                 $dadosMorada = $request->validated();
-                // ALTERAÇÃO: Usa a nova relação 'moradas'
                 $morada = $user->moradas()->create($dadosMorada);
 
-                // Calcular o total
-                $subtotal = $cartItems->sum(fn($item) => $item->quantidade * $item->livro->preco);
-                $total = $subtotal;
+                // --- INÍCIO DAS NOVAS ALTERAÇÕES ---
 
-                // Criar a encomenda
-                // ALTERAÇÃO: Usa a nova relação 'encomendas' e o novo Enum
+                // 1. Cálculo do Subtotal (esta parte já existia e estava correta)
+                $subtotal = $cartItems->sum(fn($item) => $item->quantity * $item->livro->preco);
+
+                // 2. Lógica de Cálculo dos Portes de Envio (NOVO)
+                $portes_envio = 4.99;
+                if ($subtotal > 50) {
+                    $portes_envio = 0;
+                }
+                // 3. Lógica de Cálculo de Impostos (IVA a 6%)
+                // ALTERAÇÃO AQUI: Adicionado round()
+                $impostos = round($subtotal * 0.06, 2);
+
+
+                // 4. Cálculo do Total Final (NOVO)
+                $total = round($subtotal + $portes_envio + $impostos, 2);
+                // --- FIM DAS NOVAS ALTERAÇÕES ---
+
+
+                // Criar a encomenda com os valores calculados
                 $encomenda = $user->encomendas()->create([
                     'numero_encomenda'    => 'ENC-' . $user->id . '-' . time(),
-                    // ALTERAÇÃO: Nomes das colunas da BD
                     'morada_envio_id'     => $morada->id,
                     'morada_faturacao_id' => $morada->id,
                     'estado'              => EstadoEncomenda::PENDENTE,
+                    // --- CAMPOS ATUALIZADOS ---
                     'subtotal'            => $subtotal,
-                    'impostos'            => 0,
-                    'portes_envio'        => 0,
+                    'impostos'            => $impostos,
+                    'portes_envio'        => $portes_envio,
                     'total'               => $total,
                 ]);
 
-                // Copiar os itens para a encomenda
+                // Copiar os itens para a encomenda (lógica existente)
                 foreach ($cartItems as $item) {
-
-
-                    // ***** LINHA DE DEBUG ADICIONADA *****
                     Log::info('Inspeccionando o $item do carrinho antes de criar o EncomendaItem', $item->toArray());
-
-
-                    // ALTERAÇÃO: Usa a nova relação 'itens' do modelo Encomenda
                     $encomenda->itens()->create([
                         'livro_id'   => $item->livro_id,
                         'quantidade' => $item->quantity,
@@ -76,6 +86,9 @@ class CheckoutController extends Controller
 
                 // Esvaziar o carrinho
                 $user->cart->items()->delete();
+
+                // Guardar a encomenda criada para usar fora da transação
+                $encomendaCriada = $encomenda;
             });
         } catch (\Exception $e) {
             Log::error('Erro ao criar encomenda', [
@@ -86,7 +99,7 @@ class CheckoutController extends Controller
             return back()->with('error', 'Ocorreu um erro inesperado ao processar a sua encomenda. Por favor, tente novamente.');
         }
 
-        // Redirecionar com sucesso
+        // Ação original: redirecionava para o dashboard. Iremos mudar isto no futuro.
         return redirect()->route('dashboard')->with('success', 'A sua encomenda foi criada com sucesso e está a aguardar pagamento!');
     }
 }

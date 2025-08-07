@@ -10,7 +10,8 @@ use App\Http\Controllers\{
     UserController,
     HomeController,
     CartController,
-    CheckoutController
+    CheckoutController,
+    AdminEncomendaController
 };
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
@@ -154,6 +155,10 @@ Route::middleware([
         // Gestão de Requisições
         Route::patch('/requisicoes/{requisicao}/aprovar', [RequisicaoController::class, 'aprovar'])->name('requisicoes.aprovar');
         Route::patch('/requisicoes/{requisicao}/entregar', [RequisicaoController::class, 'entregar'])->name('requisicoes.entregar');
+
+        // Gestão de Encomendas
+        Route::get('/admin/encomendas', [AdminEncomendaController::class, 'index'])->name('admin.encomendas.index');
+        Route::get('/admin/encomendas/{encomenda}', [AdminEncomendaController::class, 'show'])->name('admin.encomendas.show');
 
         // Gestão de Reviews
         Route::get('/reviews', [ReviewController::class, 'index'])->name('admin.reviews.index');

@@ -22,8 +22,8 @@ class Livro extends Model
         'imagem_capa',
         'preco',
         'ativo',
-        'quantidade', 
-        'quantidade_venda', 
+        'quantidade',
+        'quantidade_venda',
     ];
 
     protected $encryptable = [
@@ -144,5 +144,22 @@ class Livro extends Model
     public function alertasDisponibilidade()
     {
         return $this->hasMany(AlertaDisponibilidade::class);
+    }
+    public function getUrlCapaAttribute()
+    {
+        // O campo 'imagem_capa' é desencriptado automaticamente pelo Trait
+        // quando o acedemos aqui.
+        $caminhoImagem = $this->imagem_capa;
+
+        // Se o caminho da imagem não for nulo e o ficheiro existir no disco 'public',
+        // retorna o URL completo. O disco 'public' corresponde à pasta 'storage/app/public'.
+        if ($caminhoImagem && \Illuminate\Support\Facades\Storage::disk('public')->exists($caminhoImagem)) {
+            return \Illuminate\Support\Facades\Storage::disk('public')->url($caminhoImagem);
+        }
+
+        // Se não houver imagem ou o ficheiro não for encontrado,
+        // retorna o URL de uma imagem "placeholder" para evitar erros.
+        // Crie uma imagem em 'public/images/placeholder_capa.png' ou use um serviço online.
+        return 'https://via.placeholder.com/150x220.png?text=Sem+Capa';
     }
 }
