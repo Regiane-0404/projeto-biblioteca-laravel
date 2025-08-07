@@ -11,6 +11,15 @@
                 <div class="card-body">
                     <form action="{{ route('checkout.morada.store') }}" method="POST" class="space-y-6">
                         @csrf
+                        @if ($errors->any())
+                            <div style="background: #f8d7da; color: #721c24; padding: 15px;">
+                                <ul>
+                                    @foreach ($errors->all() as $error)
+                                        <li><strong>{{ $error }}</strong></li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                        @endif
                         <h3 class="text-lg font-bold mb-4 text-left">Informações de Envio</h3>
                         <div class="space-y-4">
                             <!-- Nome Completo -->
@@ -152,22 +161,25 @@
 
             inputCodigoPostal.addEventListener('blur', function() {
                 const valorOriginal = this.value;
+                const cp = valorOriginal.replace(/\D/g, '');
 
-                if (/^\d{4}-?\d{3}$/.test(valorOriginal)) {
-                    const cp = valorOriginal.replace(/\D/g, '');
+                if (cp.length === 7) {
+                    const cpFormatado = cp.slice(0, 4) + '-' + cp.slice(4);
                     this.classList.add('loading');
 
-                    fetch(`/api/buscar-cp/${cp}`)
-                        .then(response => response.json())
+                    fetch(`/api/buscar-cp/${cpFormatado}`)
+                        .then(response => {
+                            if (!response.ok) throw new Error('Código Postal não encontrado');
+                            return response.json();
+                        })
                         .then(data => {
-                            console.log('Resposta da API:', data);
-                            if (data && data.street) {
-                                inputMorada.value = data.street;
-                                inputLocalidade.value = data.city;
-                            }
+                            inputMorada.value = data.street || '';
+                            inputLocalidade.value = data.city || '';
                         })
                         .catch(error => {
                             console.error('Erro ao buscar código postal:', error);
+                            inputMorada.value = '';
+                            inputLocalidade.value = '';
                         })
                         .finally(() => {
                             this.classList.remove('loading');

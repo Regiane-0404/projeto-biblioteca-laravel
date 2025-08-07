@@ -6,30 +6,24 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
-        Schema::create('addresses', function (Blueprint $table) {
+        Schema::create('moradas', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->string('nome_completo');
             $table->string('morada');
-            $table->string('complemento')->nullable(); // Ex: "3º Direito"
-            $table->string('codigo_postal');
+            $table->string('complemento')->nullable();
+            $table->string('codigo_postal', 8); // Ex: "1234-567"
             $table->string('localidade');
             $table->string('pais');
-            $table->string('nif')->nullable(); // Número de Contribuinte, opcional
+            $table->string('nif', 9)->nullable();
             $table->timestamps();
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
-        Schema::dropIfExists('addresses');
+        Schema::dropIfExists('moradas');
     }
 };

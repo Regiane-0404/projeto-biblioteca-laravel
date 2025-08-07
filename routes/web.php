@@ -15,6 +15,8 @@ use App\Http\Controllers\{
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 /*
 |--------------------------------------------------------------------------
@@ -39,37 +41,42 @@ Route::delete('/carrinho/remover/{item}', [CartController::class, 'remove'])->na
 | ROTA DE API - Consulta de Código Postal
 |--------------------------------------------------------------------------
 */
-// Substitua a sua rota de API por esta versão melhorada
 Route::get('/api/buscar-cp/{cp}', function ($cp) {
-    // Validação simples do CP
-    $cp = preg_replace('/[^0-9]/', '', $cp);
-    if (strlen($cp) !== 7) {
+    $cpFormatado = Str::of($cp)->replaceMatches('/[^0-9]/', '');
+
+    if (strlen($cpFormatado) !== 7) {
         return response()->json(['error' => 'Código Postal inválido'], 400);
     }
 
-    // Chamada segura do nosso servidor para a API externa
-    $response = Http::get("https://api.duminio.com/v1/cep/{$cp}");
+    $cpFormatado = substr($cpFormatado, 0, 4) . '-' . substr($cpFormatado, 4);
 
-    // ***** INÍCIO DA MUDANÇA *****
-    // VERIFICA se a chamada foi bem-sucedida (código de status 2xx)
-    if ($response->successful()) {
-        // Se sim, retorna a resposta da API como JSON
-        return $response->json();
+    try {
+        $json = Storage::get('codigos_postais.json');
+        $dados = json_decode($json, true);
+
+        foreach ($dados as $item) {
+            if ($item['codigo_postal'] === $cpFormatado) {
+                return response()->json([
+                    'street' => $item['morada'],
+                    'city' => $item['localidade']
+                ]);
+            }
+        }
+
+        return response()->json(['error' => 'Código Postal não encontrado.'], 404);
+    } catch (\Exception $e) {
+        return response()->json(['error' => 'Erro ao processar a requisição.'], 500);
     }
-    // ***** FIM DA MUDANÇA *****
-
-    // Se a chamada falhou, devolvemos o nosso próprio erro em formato JSON
-    // para que o nosso front-end o possa entender.
-    return response()->json([
-        'error' => 'Não foi possível obter os dados do código postal.',
-        'api_status' => $response->status() // Opcional: envia o status da API externa para depuração
-    ], 502); // 502 Bad Gateway é um bom código para este tipo de erro
 });
 
 /*
 |--------------------------------------------------------------------------
 | Rotas protegidas por autenticação
 |--------------------------------------------------------------------------
+|
+| Todos os usuários autenticados podem acessar estas rotas.
+| O middleware 'auth:sanctum', 'verified' e sessão Jetstream já estão aplicados.
+|
 */
 Route::middleware([
     'auth:sanctum',
@@ -77,22 +84,19 @@ Route::middleware([
     'verified',
 ])->group(function () {
 
-    /*
-    |--------------------------------------------------------------------------
-    | ROTAS ACESSÍVEIS POR TODOS OS USUÁRIOS LOGADOS
-    |--------------------------------------------------------------------------
-    */
-
+    // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-    // Livros (consulta)
+    // Livros
     Route::get('/livros', [LivroController::class, 'index'])->name('livros.index');
-    Route::get('/livros/{livro}', [LivroController::class, 'show'])->where('livro', '[0-9]+')->name('livros.show');
+    Route::get('/livros/{livro}', [LivroController::class, 'show'])
+        ->where('livro', '[0-9]+')
+        ->name('livros.show');
 
     Route::post('/livros/{livro}/solicitar-alerta', [LivroController::class, 'solicitarAlerta'])->name('livros.solicitar-alerta');
     Route::delete('/livros/{livro}/cancelar-alerta', [LivroController::class, 'cancelarAlerta'])->name('livros.cancelar-alerta');
 
-    // Autores e Editoras (consulta)
+    // Autores e Editoras
     Route::get('/autores', [AutorController::class, 'index'])->name('autores.index');
     Route::get('/editoras', [EditoraController::class, 'index'])->name('editoras.index');
 
@@ -102,7 +106,7 @@ Route::middleware([
     Route::post('/requisicoes', [RequisicaoController::class, 'store'])->name('requisicoes.store');
     Route::delete('/requisicoes/{requisicao}/cancelar', [RequisicaoController::class, 'cancelar'])->name('requisicoes.cancelar');
 
-    // Reviews (submissão pelo Cidadão)
+    // Reviews
     Route::get('/requisicoes/{requisicao}/review', [RequisicaoController::class, 'mostrarFormularioReview'])->name('reviews.create');
     Route::post('/requisicoes/{requisicao}/review', [RequisicaoController::class, 'guardarReview'])->name('reviews.store');
 
@@ -110,14 +114,12 @@ Route::middleware([
     |--------------------------------------------------------------------------
     | ROTAS DO PROCESSO DE CHECKOUT
     |--------------------------------------------------------------------------
+    |
+    | Estão dentro do grupo autenticado, mas SEM middleware aninhado extra.
+    |
     */
-    Route::middleware(['auth'])->group(function () {
-        // Passo 1: Mostra o formulário da morada
-        Route::get('/checkout/morada', [CheckoutController::class, 'mostrarFormularioMorada'])->name('checkout.morada.form');
-
-        // Passo 2: Guarda a morada e cria a encomenda
-        Route::post('/checkout/morada', [CheckoutController::class, 'guardarMoradaECriarEncomenda'])->name('checkout.morada.store');
-    });
+    Route::get('/checkout/morada', [CheckoutController::class, 'mostrarFormularioMorada'])->name('checkout.morada.form');
+    Route::post('/checkout/morada', [CheckoutController::class, 'guardarMoradaECriarEncomenda'])->name('checkout.morada.store');
 
     /*
     |--------------------------------------------------------------------------

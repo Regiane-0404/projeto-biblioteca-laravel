@@ -4,13 +4,16 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Relations\HasMany; // <-- ADICIONEI ESTE IMPORT
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 use Laravel\Jetstream\HasProfilePhoto;
 use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use App\Models\Order; // Este 'use' já estava correto
+use App\Models\Morada;
+use App\Models\Encomenda;
 
 class User extends Authenticatable
 {
@@ -25,7 +28,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
-        'role', // Verifique se 'role' e 'ativo' estão no seu fillable
+        'role',
         'ativo',
         'pontos',
     ];
@@ -61,49 +64,46 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
-            'ativo' => 'boolean', // Verifique se 'ativo' está aqui
+            'ativo' => 'boolean',
         ];
     }
 
     // --- RELACIONAMENTOS ---
 
-    public function requisicoes(): HasMany // <-- ADICIONEI O TIPO DE RETORNO
+    public function requisicoes(): HasMany
     {
         return $this->hasMany(Requisicao::class);
     }
 
-    public function requisicoesAtivas() // <-- NOME CORRIGIDO
+    public function requisicoesAtivas()
     {
         return $this->hasMany(Requisicao::class)->whereIn('status', ['solicitado', 'aprovado']);
     }
 
-    /**
-     * Obtém todas as reviews feitas por este usuário.
-     */
     public function reviews()
     {
         return $this->hasMany(Review::class);
     }
 
-    /**
-     * Obtém os alertas de disponibilidade para este usuário.
-     */
     public function alertasDisponibilidade()
     {
         return $this->hasMany(AlertaDisponibilidade::class);
     }
 
-
     public function cart(): HasOne
     {
-        // Garante que, se não houver carrinho, um novo é criado com o user_id correto
         return $this->hasOne(Cart::class)->withDefault();
     }
 
-    /* Define a relação: Um utilizador pode ter muitas moradas.
- */
-    public function addresses(): HasMany
+
+    public function moradas(): HasMany
     {
-        return $this->hasMany(Address::class);
+        return $this->hasMany(Morada::class);
+    }
+
+
+    public function encomendas(): HasMany
+    {
+        return $this->hasMany(Encomenda::class);
     }
 }

@@ -52,14 +52,55 @@
                             </ul>
                         </div>
                     </div>
-
-
                 </div>
             </header>
         @endif
 
         <!-- Page Content -->
         <main class="bg-base-200 min-h-screen">
+
+            {{-- ========================================================= --}}
+            {{-- == INÍCIO DO BLOCO DE MENSAGENS (COLE AQUI)          == --}}
+            {{-- ========================================================= --}}
+            <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 pt-4">
+                {{-- Mensagem de Sucesso --}}
+                @if (session('success'))
+                    <div class="alert alert-success shadow-lg mb-4">
+                        <div>
+                            <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current flex-shrink-0 h-6 w-6"
+                                fill="none" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <span>{{ session('success') }}</span>
+                        </div>
+                    </div>
+                @endif
+
+                {{-- Mensagem de Erro (do back() ou de validação) --}}
+                @if (session('error') || !$errors->isEmpty())
+                    <div class="alert alert-error shadow-lg mb-4">
+                        <div>
+                            <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current flex-shrink-0 h-6 w-6"
+                                fill="none" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <span>
+                                @if (session('error'))
+                                    {{ session('error') }}
+                                @else
+                                    Houve alguns erros com os seus dados. Por favor, verifique os campos em falta.
+                                @endif
+                            </span>
+                        </div>
+                    </div>
+                @endif
+            </div>
+            {{-- ========================================================= --}}
+            {{-- == FIM DO BLOCO DE MENSAGENS                           == --}}
+            {{-- ========================================================= --}}
+
             {{ $slot }}
         </main>
     </div>
@@ -117,8 +158,10 @@
                         <div class="form-control">
                             <label class="label"><span class="label-text">Papel / Função</span></label>
                             <select name="role" class="select select-bordered w-full" required>
-                                <option value="cidadao" selected>Cidadão</option>
-                                <option value="admin">Administrador</option>
+                                <option value="cidadao" {{ old('role') === 'cidadao' ? 'selected' : '' }}>Cidadão
+                                </option>
+                                <option value="admin" {{ old('role') === 'admin' ? 'selected' : '' }}>Administrador
+                                </option>
                             </select>
                             @error('role')
                                 <span class="text-error text-sm mt-1">{{ $message }}</span>
