@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use App\Http\Controllers\StripeWebhookController;
 
 /*
 |--------------------------------------------------------------------------
@@ -112,15 +113,20 @@ Route::middleware([
     Route::post('/requisicoes/{requisicao}/review', [RequisicaoController::class, 'guardarReview'])->name('reviews.store');
 
     /*
-    |--------------------------------------------------------------------------
-    | ROTAS DO PROCESSO DE CHECKOUT
-    |--------------------------------------------------------------------------
-    |
-    | Estão dentro do grupo autenticado, mas SEM middleware aninhado extra.
-    |
-    */
+|--------------------------------------------------------------------------
+| ROTAS DO PROCESSO DE CHECKOUT
+|--------------------------------------------------------------------------
+*/
     Route::get('/checkout/morada', [CheckoutController::class, 'mostrarFormularioMorada'])->name('checkout.morada.form');
     Route::post('/checkout/morada', [CheckoutController::class, 'guardarMoradaECriarEncomenda'])->name('checkout.morada.store');
+
+    // Esta rota irá receber a encomenda, criar a sessão no Stripe e redirecionar.
+    Route::get('/checkout/{encomenda}/iniciar-pagamento', [CheckoutController::class, 'iniciarSessaoStripe'])->name('checkout.stripe.create');
+    // Rota para onde o Stripe envia o utilizador após um pagamento BEM SUCEDIDO.
+    Route::get('/checkout/sucesso', [CheckoutController::class, 'sucessoPagamentoStripe'])->name('checkout.stripe.sucesso');
+
+    // Rota para onde o Stripe envia o utilizador se ele CANCELAR o pagamento.
+    Route::get('/checkout/cancelado', [CheckoutController::class, 'canceladoPagamentoStripe'])->name('checkout.stripe.cancelado');
 
     /*
     |--------------------------------------------------------------------------
@@ -166,4 +172,6 @@ Route::middleware([
         Route::get('/reviews/{review}/recusar', [ReviewController::class, 'mostrarFormularioRecusa'])->name('admin.reviews.recusar.form');
         Route::patch('/reviews/{review}/recusar', [ReviewController::class, 'recusar'])->name('admin.reviews.recusar.submit');
     });
+
+    Route::post('/stripe/webhook', [StripeWebhookController::class, 'handleWebhook'])->name('stripe.webhook');
 });

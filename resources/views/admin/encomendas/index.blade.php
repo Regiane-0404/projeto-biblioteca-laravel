@@ -9,7 +9,7 @@
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white overflow-hidden shadow-xl sm:rounded-lg">
                 <div class="p-6 sm:px-20 bg-white border-b border-gray-200">
-                   
+
                 </div>
 
                 <div class="p-6">
@@ -52,7 +52,8 @@
                                         <!-- Botão de Ações (para o futuro) -->
                                         <td class="text-center">
                                             <a href="{{ route('admin.encomendas.show', ['encomenda' => $encomenda->id]) }}"
-                                                class="btn btn-sm btn-info">Ver</a>
+                                                class="text-blue-600 hover:underline">Ver</a>
+
                                         </td>
                                     </tr>
                                 @empty
