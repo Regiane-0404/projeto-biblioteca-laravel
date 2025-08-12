@@ -135,17 +135,52 @@
                 </div>
 
                 <!-- CARD 4: Ações (Rodapé) -->
-                {{-- ALTERAÇÃO E CORREÇÃO: Botões agora agrupados, coloridos e "Voltar" está aqui --}}
                 <div class="card bg-base-100 shadow-xl">
                     <div class="card-body">
                         <h3 class="card-title">Ações</h3>
-                        <p class="text-sm text-gray-500 mb-4">Ações disponíveis para esta encomenda.</p>
                         <div class="card-actions justify-between items-center">
                             {{-- Botões de Ação à Esquerda --}}
                             <div class="flex gap-2">
-                                <button class="btn btn-success" disabled>Marcar como Paga</button>
-                                <button class="btn btn-info" disabled>Marcar como Enviada</button>
-                                <button class="btn btn-error" disabled>Cancelar Encomenda</button>
+
+                                {{-- AÇÃO: Marcar como Pago (só aparece se a encomenda estiver PENDENTE) --}}
+                                @if ($encomenda->estado->value === 'pendente')
+                                    <form action="{{ route('admin.encomendas.marcar.pago', $encomenda) }}"
+                                        method="POST">
+                                        @csrf
+                                        @method('PATCH')
+                                        <button type="submit" class="btn btn-success">Marcar como Pago
+                                            (Manual)</button>
+                                    </form>
+                                @endif
+
+                                {{-- AÇÃO: Marcar como Enviada (só aparece se a encomenda estiver PAGA) --}}
+                                @if ($encomenda->estado->value === 'pago')
+                                    <form action="{{ route('admin.encomendas.marcar.enviada', $encomenda) }}"
+                                        method="POST">
+                                        @csrf
+                                        @method('PATCH')
+                                        <button type="submit" class="btn btn-info">Marcar como Enviada</button>
+                                    </form>
+                                @endif
+
+                                {{-- Lógica para o botão de cancelar (só aparece se não estiver já enviada ou cancelada) --}}
+                                @if (!in_array($encomenda->estado->value, ['enviado', 'cancelado']))
+                                    <form action="{{ route('admin.encomendas.cancelar', $encomenda) }}" method="POST">
+                                        @csrf
+                                        @method('PATCH')
+                                        <button type="submit" class="btn btn-error">Cancelar Encomenda</button>
+                                    </form>
+                                @endif
+                                {{-- ======================================================= --}}
+                                {{-- ==           BOTÃO DE FATURA (NOVA POSIÇÃO)          == --}}
+                                {{-- ======================================================= --}}
+                                {{-- Só aparece se a encomenda estiver PAGA, ENVIADA ou ENTREGUE --}}
+                                @if (in_array($encomenda->estado->value, ['pago', 'enviado', 'entregue']))
+                                    <a href="{{ route('admin.encomendas.fatura.pdf', $encomenda) }}" target="_blank"
+                                        class="btn btn-secondary">
+                                        📄 Gerar Fatura
+                                    </a>
+                                @endif
                             </div>
                             {{-- Botão Voltar à Direita --}}
                             <a href="{{ route('admin.encomendas.index') }}" class="btn btn-ghost">

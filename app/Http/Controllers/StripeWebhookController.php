@@ -5,10 +5,9 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Encomenda;
 use App\Enums\EstadoEncomenda;
-use Stripe\Stripe;
 use Stripe\Webhook;
 use Stripe\Exception\SignatureVerificationException;
-use Illuminate\Support\Facades\Log; // Para depuração
+use Illuminate\Support\Facades\Log;
 
 class StripeWebhookController extends Controller
 {
@@ -16,49 +15,42 @@ class StripeWebhookController extends Controller
     {
         $payload = $request->getContent();
         $sig_header = $request->header('Stripe-Signature');
-
-        // Vamos precisar desta chave no nosso .env
-        $endpoint_secret = config('services.stripe.webhook_secret');
+        $secret = config('services.stripe.webhook_secret');
 
         try {
-            $event = Webhook::constructEvent($payload, $sig_header, $endpoint_secret);
+            $event = Webhook::constructEvent(
+                $payload,
+                $sig_header,
+                $secret
+            );
         } catch (\UnexpectedValueException $e) {
-            // Payload inválido
-            Log::error('Stripe Webhook - Payload inválido: ' . $e->getMessage());
-            return response('Payload inválido', 400);
+            Log::error('Stripe Webhook: Payload inválido.');
+            return response('Invalid payload', 400);
         } catch (SignatureVerificationException $e) {
-            // Assinatura inválida
-            Log::error('Stripe Webhook - Assinatura inválida: ' . $e->getMessage());
-            return response('Assinatura inválida', 400);
+            Log::error('Stripe Webhook: Assinatura inválida.');
+            return response('Invalid signature', 400);
         }
 
-        // Lidar com o evento 'checkout.session.completed'
-        if ($event->type == 'checkout.session.completed') {
+        if ($event->type === 'checkout.session.completed') {
             $session = $event->data->object;
-
-            // Obter o ID da encomenda dos metadados que guardámos
             $encomendaId = $session->metadata->encomenda_id ?? null;
 
             if ($encomendaId) {
                 $encomenda = Encomenda::find($encomendaId);
 
-                // Verificar se a encomenda existe e se ainda está pendente
-                if ($encomenda && $encomenda->estado === EstadoEncomenda::PENDENTE) {
-                    // ATUALIZAR O ESTADO DA ENCOMENDA
-                    $encomenda->estado = EstadoEncomenda::PAGA;
+                if ($encomenda && $encomenda->estado->value === 'pendente') {
+                    $encomenda->estado = EstadoEncomenda::PAGO;
                     $encomenda->save();
 
-                    Log::info("Encomenda #{$encomendaId} marcada como PAGA via webhook.");
-                    // Aqui pode adicionar outras lógicas, como:
-                    // - Enviar email de confirmação ao cliente
-                    // - Notificar a equipa de logística
+                    Log::info("Webhook recebido: A encomenda #{$encomendaId} foi marcada como PAGA.");
+                } else {
+                    Log::warning("Webhook Stripe: Encomenda {$encomendaId} não encontrada ou já atualizada.");
                 }
             } else {
-                Log::warning('Stripe Webhook - checkout.session.completed sem encomenda_id nos metadados.', (array)$session);
+                Log::warning('Webhook Stripe: Nenhum encomenda_id encontrado nos metadados.');
             }
         }
 
-        // Responder ao Stripe que recebemos o evento com sucesso.
         return response('Webhook Recebido', 200);
     }
 }

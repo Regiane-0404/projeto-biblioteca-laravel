@@ -12,13 +12,24 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-        // Adiciona o nosso middleware ao grupo 'web',
-        // o que faz com que ele seja executado em quase todos os pedidos.
+
+        // =======================================================
+        // ==            INÍCIO DA NOVA CONFIGURAÇÃO            ==
+        // =======================================================
+        // Diz ao Laravel para não verificar o CSRF na nossa rota do Stripe.
+        $middleware->validateCsrfTokens(except: [
+            '/stripe/webhook'
+        ]);
+        // =======================================================
+        // ==              FIM DA NOVA CONFIGURAÇÃO             ==
+        // =======================================================
+
+
+        // A sua configuração existente permanece igual.
         $middleware->appendToGroup('web', [
             \App\Http\Middleware\TransferSessionCartToDatabase::class,
         ]);
 
-        // A sua configuração de 'alias' permanece igual.
         $middleware->alias([
             'admin' => \App\Http\Middleware\AdminMiddleware::class,
             'cidadao' => \App\Http\Middleware\CidadaoMiddleware::class,

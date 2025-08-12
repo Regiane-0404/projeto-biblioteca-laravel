@@ -165,6 +165,14 @@ Route::middleware([
         // Gestão de Encomendas
         Route::get('/admin/encomendas', [AdminEncomendaController::class, 'index'])->name('admin.encomendas.index');
         Route::get('/admin/encomendas/{encomenda}', [AdminEncomendaController::class, 'show'])->name('admin.encomendas.show');
+        // Rota para marcar uma encomenda como PAGA
+        Route::patch('/admin/encomendas/{encomenda}/marcar-pago', [AdminEncomendaController::class, 'marcarComoPago'])->name('admin.encomendas.marcar.pago');
+
+        // Rota para marcar uma encomenda como ENVIADA
+        Route::patch('/admin/encomendas/{encomenda}/marcar-enviada', [AdminEncomendaController::class, 'marcarComoEnviada'])->name('admin.encomendas.marcar.enviada');
+        Route::patch('/admin/encomendas/{encomenda}/cancelar', [AdminEncomendaController::class, 'cancelarEncomenda'])->name('admin.encomendas.cancelar');
+        Route::get('/admin/encomendas/{encomenda}/fatura', [AdminEncomendaController::class, 'gerarFaturaPDF'])->name('admin.encomendas.fatura.pdf');
+
 
         // Gestão de Reviews
         Route::get('/reviews', [ReviewController::class, 'index'])->name('admin.reviews.index');
@@ -172,6 +180,4 @@ Route::middleware([
         Route::get('/reviews/{review}/recusar', [ReviewController::class, 'mostrarFormularioRecusa'])->name('admin.reviews.recusar.form');
         Route::patch('/reviews/{review}/recusar', [ReviewController::class, 'recusar'])->name('admin.reviews.recusar.submit');
     });
-
-    Route::post('/stripe/webhook', [StripeWebhookController::class, 'handleWebhook'])->name('stripe.webhook');
 });
