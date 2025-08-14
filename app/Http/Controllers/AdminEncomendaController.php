@@ -98,6 +98,14 @@ class AdminEncomendaController extends Controller
         if ($encomenda->estado->value === 'pendente') {
             $encomenda->estado = EstadoEncomenda::PAGO;
             $encomenda->save();
+            // =======================================================
+            // ==                 REGISTAR O LOG AQUI               ==
+            // =======================================================
+            activity()
+                ->performedOn($encomenda) // O objeto da ação
+                ->causedBy(auth()->user())  // Quem fez
+                ->log('A encomenda foi marcada como PAGA manualmente.'); // O que aconteceu
+
             return back()->with('success', 'Encomenda marcada como Paga com sucesso!');
         }
         return back()->with('error', 'Ação inválida. A encomenda não se encontra pendente.');
@@ -112,6 +120,15 @@ class AdminEncomendaController extends Controller
         if ($encomenda->estado->value === 'pago') {
             $encomenda->estado = EstadoEncomenda::ENVIADO;
             $encomenda->save();
+
+            // =======================================================
+            // ==                 REGISTAR O LOG AQUI               ==
+            // =======================================================
+            activity()
+                ->performedOn($encomenda)
+                ->causedBy(auth()->user())
+                ->log('A encomenda foi marcada como ENVIADA.');
+
             return back()->with('success', 'Encomenda marcada como Enviada com sucesso!');
         }
         return back()->with('error', 'Ação inválida. A encomenda precisa de estar paga para ser enviada.');
@@ -122,6 +139,16 @@ class AdminEncomendaController extends Controller
         if (!in_array($encomenda->estado->value, ['enviado', 'cancelado'])) {
             $encomenda->estado = EstadoEncomenda::CANCELADO;
             $encomenda->save();
+
+            // =======================================================
+            // ==                 REGISTAR O LOG AQUI               ==
+            // =======================================================
+            activity()
+                ->performedOn($encomenda)
+                ->causedBy(auth()->user())
+                ->log('A encomenda foi CANCELADA.');
+
+
             // TODO: Adicionar lógica para repor o stock dos livros.
             return back()->with('success', 'Encomenda cancelada com sucesso!');
         }

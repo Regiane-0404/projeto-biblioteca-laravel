@@ -49,6 +49,9 @@
                             {{-- ==   FIM DO NOVO MENU DE ENCOMENDAS (MOBILE)  == --}}
                             {{-- ============================================== --}}
 
+                            <!-- Novo item Logs (MOBILE) -->
+                            <li><a href="{{ route('admin.logs.index') }}">📜 Logs de Atividade</a></li>
+
                             <li><a>👥 Gestão de Utilizadores</a>
                                 <ul class="p-2">
                                     <li><a href="{{ route('users.index') }}">Ver Lista</a></li>
@@ -121,6 +124,9 @@
                         {{-- =============================================== --}}
                         {{-- ==   FIM DO NOVO MENU DE ENCOMENDAS (DESKTOP)  == --}}
                         {{-- =============================================== --}}
+
+                        <!-- Novo item Logs (DESKTOP) -->
+                        <li><a href="{{ route('admin.logs.index') }}">📜 Logs de Atividade</a></li>
 
                         <li>
                             <details>

@@ -149,10 +149,14 @@ class RequisicaoController extends Controller
 
     public function entregar(Request $request, Requisicao $requisicao)
     {
+
+
         $validated = $request->validate(['data_fim_real' => 'required|date', 'observacoes' => 'nullable|string|max:500', 'estado_devolucao' => 'required|string|in:intacto,marcas_uso,danificado,nao_devolvido']);
         $dataFimReal = Carbon::parse($validated['data_fim_real']);
         $diasAtraso = $dataFimReal->isAfter($requisicao->data_fim_prevista) ? $dataFimReal->diffInDays($requisicao->data_fim_prevista) : 0;
+
         $requisicao->update(['status' => 'devolvido', 'data_fim_real' => $dataFimReal, 'observacoes' => $validated['observacoes'], 'dias_atraso' => $diasAtraso, 'estado_devolucao' => $validated['estado_devolucao']]);
+
         if (in_array($validated['estado_devolucao'], ['intacto', 'marcas_uso', 'danificado'])) {
             $livroDevolvido = $requisicao->livro;
             if ($livroDevolvido) {

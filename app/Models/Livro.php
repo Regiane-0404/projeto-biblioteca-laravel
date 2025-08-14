@@ -10,9 +10,14 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
+// --- Adicionar os "use" statements necessários ---
+use Spatie\Activitylog\Traits\LogsActivity;
+use Spatie\Activitylog\LogOptions;
+
 class Livro extends Model
 {
-    use HasFactory, Encryptable;
+    // --- Adicionar o trait "LogsActivity" ---
+    use HasFactory, Encryptable, LogsActivity;
 
     protected $fillable = [
         'isbn',
@@ -37,6 +42,10 @@ class Livro extends Model
     protected $casts = [
         'ativo' => 'boolean',
     ];
+
+    // ===============================================
+    // ==   O SEU CÓDIGO ORIGINAL COMEÇA AQUI (INTACTO)   ==
+    // ===============================================
 
     // RELAÇÕES
     public function editora(): BelongsTo
@@ -84,6 +93,8 @@ class Livro extends Model
     {
         return $this->hasMany(Review::class);
     }
+
+
 
     /**
      * Encontra livros relacionados com base em palavras-chave na bibliografia.
@@ -145,6 +156,7 @@ class Livro extends Model
     {
         return $this->hasMany(AlertaDisponibilidade::class);
     }
+    
     public function getUrlCapaAttribute()
     {
         // O campo 'imagem_capa' é desencriptado automaticamente pelo Trait
@@ -162,4 +174,36 @@ class Livro extends Model
         // Crie uma imagem em 'public/images/placeholder_capa.png' ou use um serviço online.
         return 'https://via.placeholder.com/150x220.png?text=Sem+Capa';
     }
+
+    // ===============================================
+    // ==     O SEU CÓDIGO ORIGINAL TERMINA AQUI      ==
+    // ===============================================
+
+    // =======================================================
+    // ==         INÍCIO DA CONFIGURAÇÃO DO LOGGER          ==
+    // =======================================================
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->useLogName('Livros')
+            ->logOnly(['nome', 'preco', 'quantidade', 'quantidade_venda', 'ativo'])
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs()
+            ->setDescriptionForEvent(function(string $eventName) {
+                $nomeLivro = $this->nome;
+                switch ($eventName) {
+                    case 'created':
+                        return "O livro '{$nomeLivro}' foi criado";
+                    case 'updated':
+                        return "O livro '{$nomeLivro}' foi atualizado";
+                    case 'deleted':
+                        return "O livro '{$nomeLivro}' foi apagado";
+                    default:
+                        return "Ação '{$eventName}' realizada no livro '{$nomeLivro}'";
+                }
+            });
+    }
+    // =======================================================
+    // ==           FIM DA CONFIGURAÇÃO DO LOGGER           ==
+    // =======================================================
 }

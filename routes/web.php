@@ -11,7 +11,8 @@ use App\Http\Controllers\{
     HomeController,
     CartController,
     CheckoutController,
-    AdminEncomendaController
+    AdminEncomendaController,
+    AdminLogController 
 };
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
@@ -149,7 +150,12 @@ Route::middleware([
         Route::post('/livros/importar', [LivroController::class, 'guardarLivroImportado'])->name('livros.importar.store');
 
         // Gestão de Autores
-        Route::resource('autores', AutorController::class)->except(['index', 'show']);
+        // Ficheiro: routes/web.php
+
+        // Gestão de Autores
+        Route::resource('autores', AutorController::class)
+            ->parameters(['autores' => 'autor']) // <-- ADICIONE ESTA LINHA
+            ->except(['index', 'show']);
 
         // Gestão de Editoras
         Route::resource('editoras', EditoraController::class)->except(['index', 'show']);
@@ -161,6 +167,8 @@ Route::middleware([
         // Gestão de Requisições
         Route::patch('/requisicoes/{requisicao}/aprovar', [RequisicaoController::class, 'aprovar'])->name('requisicoes.aprovar');
         Route::patch('/requisicoes/{requisicao}/entregar', [RequisicaoController::class, 'entregar'])->name('requisicoes.entregar');
+
+
 
         // Gestão de Encomendas
         Route::get('/admin/encomendas', [AdminEncomendaController::class, 'index'])->name('admin.encomendas.index');
@@ -179,5 +187,8 @@ Route::middleware([
         Route::patch('/reviews/{review}/aprovar', [ReviewController::class, 'aprovar'])->name('admin.reviews.aprovar');
         Route::get('/reviews/{review}/recusar', [ReviewController::class, 'mostrarFormularioRecusa'])->name('admin.reviews.recusar.form');
         Route::patch('/reviews/{review}/recusar', [ReviewController::class, 'recusar'])->name('admin.reviews.recusar.submit');
+
+        // Rotas de Logs
+        Route::get('/admin/logs', [AdminLogController::class, 'index'])->name('admin.logs.index');
     });
 });
