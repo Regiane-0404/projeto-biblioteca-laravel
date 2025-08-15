@@ -1,6 +1,6 @@
 # 📚 Biblioteca - Sistema de Gestão e E-commerce
 
-![Screenshot do Dashboard do Projeto](./assets/screenshot.png)
+![Screenshot do Dashboard do Projeto](https://github.com/inovcorp-regiane/biblioteca-backup/raw/main/assets/screenshot.png))
 
 Um projeto Laravel completo que implementa um sistema de gestão de biblioteca com funcionalidades de requisição de livros e um fluxo de e-commerce para venda, incluindo um painel de administração robusto, testes automatizados e sistema de logs.
 
