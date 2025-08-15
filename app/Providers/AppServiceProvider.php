@@ -19,6 +19,14 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        // =======================================================
+        // ==                 INÍCIO DA CORREÇÃO                ==
+        // =======================================================
+        // Força o fuso horário de toda a aplicação para o que está
+        // definido no ficheiro de configuração.
+        date_default_timezone_set(config('app.timezone'));
+        // =======================================================
+        // ==                   FIM DA CORREÇÃO                 ==
+        // =======================================================
     }
 }

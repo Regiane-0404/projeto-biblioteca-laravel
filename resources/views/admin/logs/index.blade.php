@@ -99,7 +99,7 @@
                         </table>
                     </div>
 
-                  
+
                     <!-- Paginação (só aparece se a coleção for paginada, ou seja, se houver filtros) -->
                     @if ($logs instanceof \Illuminate\Pagination\LengthAwarePaginator)
                         <div class="mt-4">

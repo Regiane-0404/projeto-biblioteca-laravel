@@ -7,15 +7,6 @@
 
     <div class="py-6">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            @if (session('success'))
-                <div role="alert" class="alert alert-success mb-6 shadow-md"><span>{{ session('success') }}</span></div>
-            @endif
-            @if (session('error'))
-                <div role="alert" class="alert alert-error mb-6 shadow-md"><span>{{ session('error') }}</span></div>
-            @endif
-            @if (session('warning'))
-                <div role="alert" class="alert alert-warning mb-6 shadow-md"><span>{{ session('warning') }}</span></div>
-            @endif
 
             <div class="card bg-base-100 shadow-xl">
                 <div class="card-body">
@@ -123,7 +114,8 @@
                                                     Disponíveis</div>
                                             @elseif ($livro->quantidade > 0)
                                                 <div class="badge badge-warning badge-outline">Últimas Unidades
-                                                    ({{ $livro->quantidade }})</div>
+                                                    ({{ $livro->quantidade }})
+                                                </div>
                                             @else
                                                 <div class="badge badge-outline">Indisponível</div>
                                             @endif

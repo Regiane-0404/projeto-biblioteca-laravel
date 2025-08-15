@@ -13,13 +13,24 @@ class Kernel extends ConsoleKernel
      * @param  \Illuminate\Console\Scheduling\Schedule  $schedule
      * @return void
      */
+
     protected function schedule(Schedule $schedule)
     {
-        // Esta é a linha que regista a nossa tarefa.
-        // Ela diz ao sistema para executar o nosso comando todos os dias às 9 da manhã.
+        // --- Tarefa Existente ---
+        // Executa o comando para enviar lembretes de devolução todos os dias às 9:00.
         $schedule->command('app:enviar-lembretes-devolucao')->dailyAt('09:00');
-    }
+        //$schedule->command('app:enviar-lembretes-devolucao')->everyMinute();
 
+        // ==============================================================
+        // ==              INÍCIO DA NOSSA NOVA TAREFA                 ==
+        // ==============================================================
+        // Executa o comando para notificar carrinhos abandonados
+        // a cada dez minutos.
+        $schedule->command('cart:notify-abandoned')->everyTenMinutes();
+        // ==============================================================
+        // ==                FIM DA NOSSA NOVA TAREFA                  ==
+        // ==============================================================
+    }
     /**
      * Register the commands for the application.
      *
